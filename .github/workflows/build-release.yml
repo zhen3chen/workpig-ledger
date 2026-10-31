@@ -30,9 +30,6 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: 配置 Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: 从 Secrets 还原签名密钥
         # 需要的 Secrets：
         #   KEYSTORE_BASE64       —— workpig-release.jks 的 base64 字符串
