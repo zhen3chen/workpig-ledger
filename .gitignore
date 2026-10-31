@@ -13,3 +13,6 @@ keystore.properties
 .idea/
 *.iml
 .DS_Store
+
+# 生成的 Secrets 文本
+secrets.txt
