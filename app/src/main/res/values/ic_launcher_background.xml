@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 兼容 API 24-25（无自适应图标）的降级背景色 -->
+<resources>
+    <color name="ic_launcher_background">#FBF7EF</color>
+</resources>

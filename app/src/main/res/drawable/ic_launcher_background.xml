@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 图标背景：奶油底 + 薄荷渐层 -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:startColor="#EAF7F1"
+                android:centerColor="#FBF7EF"
+                android:endColor="#FDF0E2"
+                android:type="linear" />
+        </shape>
+    </item>
+</layer-list>

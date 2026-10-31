@@ -1,0 +1,97 @@
+plugins {
+    id 'com.android.application'
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────
+ *  签名配置说明
+ * ─────────────────────────────────────────────────────────────
+ *  Release 签名信息一律从本机 ~/.gradle/gradle.properties 或项目根目录
+ *  keystore.properties（已被 .gitignore 排除）读取，绝不写进代码仓库。
+ *
+ *  keystore.properties 示例：
+ *      RELEASE_STORE_FILE=/absolute/path/to/workpig-release.jks
+ *      RELEASE_STORE_PASSWORD=你的密码
+ *      RELEASE_KEY_ALIAS=workpig
+ *      RELEASE_KEY_PASSWORD=你的密码
+ *
+ *  若该文件不存在，assembleRelease 仍会产出「未签名」APK（app-release-unsigned.apk），
+ *  此时需要手动用 apksigner 签名，详见 README.md。
+ */
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+android {
+    namespace 'com.workpig.ledger'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.workpig.ledger"
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            if (keystoreProps.containsKey("RELEASE_STORE_FILE")) {
+                storeFile file(keystoreProps["RELEASE_STORE_FILE"])
+                storePassword keystoreProps["RELEASE_STORE_PASSWORD"]
+                keyAlias keystoreProps["RELEASE_KEY_ALIAS"]
+                keyPassword keystoreProps["RELEASE_KEY_PASSWORD"]
+                // 启用 v1 + v2 + v3 全量签名，Android 7.0 及以上与小米 HyperOS 均可校验
+                enableV1Signing true
+                enableV2Signing true
+                enableV3Signing true
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false          // 纯 WebView 壳，无需混淆
+            shrinkResources false
+            if (keystoreProps.containsKey("RELEASE_STORE_FILE")) {
+                signingConfig signingConfigs.release
+            }
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // 保证 assets 里的 index.html 不被压缩，方便校验
+    androidResources {
+        noCompress 'html'
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+
+    // 统一 Kotlin 标准库版本，避免 kotlin-stdlib-jdk7/jdk8 与 stdlib 的
+    // 「Duplicate class kotlin.io.path.*」冲突（webkit 1.12 会带入 1.6.21）
+    constraints {
+        implementation('org.jetbrains.kotlin:kotlin-stdlib:1.9.24') {
+            because '统一 kotlin 标准库版本，消除重复类冲突'
+        }
+        implementation('org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24')
+        implementation('org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24')
+    }
+}

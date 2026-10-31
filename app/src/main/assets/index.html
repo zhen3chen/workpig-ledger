@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3AA98C">
+<title>打工人小账本</title>
+<!-- 单文件离线工作台：所有样式、脚本与 SVG 图标全部内联，不依赖任何 CDN -->
+<style>
+/* ============ design tokens ============ */
+:root{
+  --cream:#FBF7EF;
+  --cream-2:#F6F0E4;
+  --card:#FFFDF8;
+  --mint:#3AA98C;
+  --mint-deep:#2B8471;
+  --mint-soft:#DDF2E8;
+  --mint-line:#A9DAC9;
+  --ink:#22362F;
+  --ink-2:#4A6157;
+  --muted:#8A9A92;
+  --blush:#F6A9A0;
+  --blush-soft:#FDE6E1;
+  --apricot:#F2C27E;
+  --apricot-soft:#FCF0DB;
+  --line:#EDE4D5;
+  --white:#fff;
+  --radius:18px;
+  --radius-sm:12px;
+  --shadow:0 2px 0 rgba(58,169,140,.06), 0 8px 22px rgba(74,97,87,.07);
+  --shadow-soft:0 1px 2px rgba(74,97,87,.05), 0 4px 14px rgba(74,97,87,.05);
+  --font:-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Roboto, sans-serif;
+  --num:"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sidebar:232px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font);
+  color:var(--ink);
+  background:var(--cream);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(169,218,201,.28), transparent 42%),
+    radial-gradient(circle at 92% 0%, rgba(252,240,219,.7), transparent 38%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+  font-size:15px;
+  line-height:1.55;
+}
+img,svg{max-width:100%}
+button{font-family:inherit}
+a{color:var(--mint-deep)}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+
+/* ============ layout ============ */
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sidebar);flex:0 0 var(--sidebar);
+  padding:22px 16px 18px;
+  position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;gap:6px;
+  border-right:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,253,248,.94),rgba(251,247,239,.72));
+  backdrop-filter:blur(6px);
+}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 16px}
+.brand-badge{width:40px;height:40px;flex:0 0 40px;border-radius:13px;background:var(--mint-soft);display:grid;place-items:center}
+.brand-badge svg{width:26px;height:26px}
+.brand-name{font-weight:800;font-size:16px;letter-spacing:.4px;line-height:1.2}
+.brand-sub{font-size:11px;color:var(--muted);letter-spacing:1.4px;text-transform:uppercase}
+.nav-item{
+  display:flex;align-items:center;gap:11px;
+  min-height:46px;padding:0 13px;border-radius:13px;
+  border:0;background:transparent;color:var(--ink-2);
+  font-size:14.5px;font-weight:600;cursor:pointer;text-align:left;width:100%;
+  transition:background .18s,color .18s,transform .18s;
+}
+.nav-item svg{width:20px;height:20px;flex:0 0 20px;color:var(--mint-deep);opacity:.78}
+.nav-item:hover{background:#F4EFE3}
+.nav-item.active{background:var(--mint-soft);color:var(--mint-deep)}
+.nav-item.active svg{opacity:1}
+.sidebar-foot{margin-top:auto;padding:12px 8px 0;border-top:1px dashed var(--line);font-size:11.5px;color:var(--muted);line-height:1.7}
+.sidebar-foot b{color:var(--ink-2);font-weight:700}
+
+.main{flex:1;min-width:0;padding:24px 28px 40px;max-width:1160px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.page-title{font-size:22px;font-weight:800;letter-spacing:.2px;margin:0}
+.page-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.wallet-chip{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--white);border:1px solid var(--line);border-radius:999px;
+  padding:8px 14px;box-shadow:var(--shadow-soft);font-size:13px;color:var(--ink-2);white-space:nowrap;
+}
+.wallet-chip svg{width:18px;height:18px;color:var(--mint-deep)}
+.wallet-chip b{font-family:var(--num);font-size:14px;color:var(--mint-deep)}
+
+.view{display:none;animation:fade .26s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ============ generic card ============ */
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;box-shadow:var(--shadow);position:relative;
+}
+.card + .card{margin-top:14px}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.card-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;letter-spacing:.2px}
+.card-title svg{width:19px;height:19px;color:var(--mint-deep)}
+.mcat-ic{width:16px;height:16px;color:inherit;flex:0 0 16px}
+.card-hint{font-size:12px;color:var(--muted)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:1040px){.g3{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+
+/* ============ today banner ============ */
+.today{
+  border-radius:22px;border:1px solid #CDE9DC;
+  background:linear-gradient(120deg,#EAF7F1 0%,#FDF9F0 58%,#FDF0E2 100%);
+  padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow-soft);
+}
+.today-head{display:flex;align-items:center;gap:9px;font-weight:800;font-size:14.5px;margin-bottom:10px}
+.today-head svg{width:20px;height:20px;color:var(--mint-deep)}
+.today-date{margin-left:auto;font-size:12px;color:var(--muted);font-weight:600;font-family:var(--num)}
+.today-item{
+  display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.82);
+  border:1px solid #E4EEE7;border-radius:14px;padding:10px 12px;margin-top:8px;font-size:13.5px;
+}
+.today-item .dot{width:8px;height:8px;border-radius:50%;background:var(--apricot);flex:0 0 8px}
+.today-item.warn{border-color:#F6CFC6;background:#FFF5F2}
+.today-item.warn .dot{background:var(--blush)}
+.today-item .ti-main{flex:1;min-width:0}
+.today-item .ti-sub{font-size:11.5px;color:var(--muted)}
+.today-item .ti-amt{font-family:var(--num);font-weight:700;color:#C4614F}
+.today-item .ti-amt.ok{color:var(--mint-deep)}
+.today-quiet{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2)}
+.today-quiet svg{width:18px;height:18px;color:var(--mint)}
+
+/* ============ buttons / inputs ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:44px;padding:0 16px;border-radius:13px;
+  border:1px solid var(--line);background:var(--white);color:var(--ink-2);
+  font-size:14px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .18s,background .18s;
+  box-shadow:0 1px 0 rgba(74,97,87,.05);
+}
+.btn:hover{background:#FBF7EF}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:18px;height:18px}
+.btn-primary{background:var(--mint);border-color:var(--mint);color:#fff;box-shadow:0 6px 14px rgba(58,169,140,.24)}
+.btn-primary:hover{background:var(--mint-deep)}
+.btn-soft{background:var(--mint-soft);border-color:#CFE9DE;color:var(--mint-deep)}
+.btn-soft:hover{background:#D3EEE2}
+.btn-danger{color:#C4614F;border-color:#F3CFC7;background:#FFF6F3}
+.btn-sm{min-height:36px;padding:0 12px;font-size:12.5px;border-radius:11px}
+.btn-sm svg{width:16px;height:16px}
+.btn-block{width:100%}
+.icon-btn{
+  width:44px;height:44px;display:grid;place-items:center;border-radius:13px;
+  border:1px solid var(--line);background:var(--white);cursor:pointer;color:var(--ink-2);
+}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn:hover{background:#FBF7EF}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field > label,.field-label{font-size:12.5px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:5px}
+.field-label .tip{font-weight:500;color:var(--muted);font-size:11.5px}
+input[type=text],input[type=number],input[type=date],input[type=password],select,textarea{
+  width:100%;min-height:44px;border:1px solid var(--line);background:var(--white);
+  border-radius:12px;padding:10px 12px;font-size:16px;color:var(--ink);font-family:inherit;
+  outline:none;transition:border-color .16s,box-shadow .16s;
+}
+textarea{min-height:64px;resize:vertical;font-size:15px}
+input:focus,select:focus,textarea:focus{border-color:var(--mint-line);box-shadow:0 0 0 3px rgba(58,169,140,.14)}
+input[type=number]{font-family:var(--num)}
+select{appearance:none;background-image:none;cursor:pointer}
+.help{font-size:11.5px;color:var(--muted);line-height:1.5}
+.row{display:flex;gap:12px}
+.row > *{flex:1;min-width:0}
+
+/* ============ stat cards ============ */
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;
+  box-shadow:var(--shadow-soft);position:relative;overflow:hidden;
+}
+.stat .lbl{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:600}
+.stat .lbl svg{width:15px;height:15px;color:var(--mint-deep)}
+.stat .big{font-family:var(--num);font-size:26px;font-weight:800;letter-spacing:-.5px;margin-top:6px;line-height:1.15}
+.stat .big small{font-size:13px;font-weight:600;color:var(--muted);margin-left:3px;font-family:var(--font)}
+.stat .sub{font-size:11.5px;color:var(--muted);margin-top:4px}
+.stat.accent{background:linear-gradient(135deg,#EAF7F1,#FDFDF9);border-color:#CFE9DE}
+.stat.accent .big{color:var(--mint-deep)}
+.stat.warm{background:linear-gradient(135deg,#FDF1E3,#FEFCF7);border-color:#F3E0C4}
+.stat.blush{background:linear-gradient(135deg,#FDEEEA,#FEFBF8);border-color:#F6DAD3}
+
+/* ============ pig illustration ============ */
+.pig-wrap{display:flex;align-items:center;justify-content:center;padding:4px}
+
+/* ============ records ============ */
+.rec-list{display:flex;flex-direction:column}
+.rec{
+  display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px dashed var(--line);
+}
+.rec:last-child{border-bottom:0}
+.rec-ico{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:grid;place-items:center;background:var(--mint-soft)}
+.rec-ico svg{width:19px;height:19px;color:var(--mint-deep)}
+.rec-main{flex:1;min-width:0}
+.rec-t1{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-t2{font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rec-right{text-align:right;flex:0 0 auto}
+.rec-amt{font-family:var(--num);font-weight:800;font-size:14.5px}
+.rec-work{font-size:11px;color:var(--mint-deep);background:var(--mint-soft);border-radius:8px;padding:1px 7px;display:inline-block;margin-top:3px;white-space:nowrap;font-weight:700}
+.mini-del{width:32px;height:32px;border-radius:9px;border:0;background:transparent;color:#BDB3A3;cursor:pointer;display:grid;place-items:center;flex:0 0 32px}
+.mini-del svg{width:15px;height:15px}
+.mini-del:hover{background:var(--blush-soft);color:#C4614F}
+.tag{font-size:10.5px;padding:1px 7px;border-radius:999px;background:#F1EDE3;color:#7A877F;font-weight:700}
+
+/* ============ forms / chips ============ */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 13px;
+  border-radius:12px;border:1px solid var(--line);background:var(--white);
+  font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;transition:all .15s;
+}
+.chip svg{width:16px;height:16px;color:#8FA79C}
+.chip.on{background:var(--mint-soft);border-color:var(--mint-line);color:var(--mint-deep)}
+.chip.on svg{color:var(--mint-deep)}
+.quick-amt{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.quick-amt button{
+  min-height:36px;padding:0 12px;border-radius:10px;border:1px dashed #DCD3C1;background:#FDFBF5;
+  font-family:var(--num);font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;
+}
+.quick-amt button:hover{border-color:var(--mint-line);color:var(--mint-deep);background:var(--mint-soft)}
+
+/* work-time feedback */
+.worktime{
+  margin-top:14px;border-radius:16px;padding:14px;border:1px solid #DFEEE7;
+  background:linear-gradient(120deg,#EDF8F2,#FBF9F1);
+}
+.worktime .wt-lbl{font-size:12px;color:var(--ink-2);font-weight:700;display:flex;align-items:center;gap:6px}
+.worktime .wt-lbl svg{width:16px;height:16px;color:var(--mint-deep)}
+.worktime .wt-big{font-family:var(--num);font-size:24px;font-weight:800;color:var(--mint-deep);margin-top:4px;letter-spacing:-.4px}
+.worktime .wt-note{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ============ formula blocks ============ */
+.formula{
+  background:#FCF9F1;border:1px dashed #E4DCC8;border-radius:14px;padding:13px 14px;
+  font-family:var(--num);font-size:12.5px;line-height:1.9;color:var(--ink-2);overflow-x:auto;
+}
+.formula .f-ln{white-space:nowrap}
+.formula .k{color:var(--muted)}
+.formula .v{color:var(--mint-deep);font-weight:700}
+.formula .op{color:#B7AE9C;padding:0 4px}
+.formula .hl{background:#FFF0D9;border-radius:5px;padding:0 4px;color:#A9711F;font-weight:700}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.kv .v{font-family:var(--num);font-weight:700;color:var(--ink)}
+.kv .v.mint{color:var(--mint-deep)}
+.kv .v.red{color:#C4614F}
+.details{border-top:1px dashed var(--line);margin-top:12px;padding-top:10px}
+.details summary{
+  cursor:pointer;list-style:none;font-size:13px;font-weight:700;color:var(--mint-deep);
+  display:flex;align-items:center;gap:6px;min-height:36px;
+}
+.details summary::-webkit-details-marker{display:none}
+.details summary svg{width:16px;height:16px;transition:transform .2s}
+.details[open] summary svg{transform:rotate(90deg)}
+.details-body{padding-top:8px;animation:fade .2s ease}
+
+/* ============ progress ============ */
+.bar{height:10px;border-radius:999px;background:#EFE9DC;overflow:hidden;position:relative}
+.bar > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#6ECBB0,#3AA98C);transition:width .5s ease}
+.bar.thin{height:7px}
+.bar.warm > i{background:linear-gradient(90deg,#F6CE8E,#E5A45C)}
+.bar.hot > i{background:linear-gradient(90deg,#F5B5AA,#DF7F6C)}
+
+/* ============ table ============ */
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:460px}
+th,td{padding:10px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.4px}
+td{font-family:var(--num);color:var(--ink)}
+td:first-child{font-family:var(--font)}
+tr.total td{font-weight:800;border-bottom:0;color:var(--ink)}
+
+/* ============ chart ============ */
+.chart-box{position:relative;width:100%}
+.chart-box svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle}
+
+/* ============ sim ============ */
+.seg{display:inline-flex;background:#F3EEE1;border-radius:12px;padding:4px;gap:3px;flex-wrap:wrap}
+.seg button{
+  border:0;background:transparent;min-height:38px;padding:0 14px;border-radius:9px;
+  font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;
+}
+.seg button.on{background:var(--white);color:var(--mint-deep);box-shadow:0 1px 3px rgba(74,97,87,.12)}
+.slider-row{display:flex;align-items:center;gap:12px}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:#E9E2D2}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;
+  border:6px solid var(--mint);margin-top:-9px;box-shadow:0 2px 6px rgba(58,169,140,.35);
+}
+input[type=range]::-moz-range-track{height:8px;border-radius:99px;background:#E9E2D2}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(--mint);background:#fff;border-radius:50%}
+.sim-out{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:900px){.sim-out{grid-template-columns:1fr 1fr}}
+.sim-cell{background:#FCF9F1;border:1px solid #EFE7D7;border-radius:13px;padding:11px 12px}
+.sim-cell .t{font-size:11.5px;color:var(--muted);font-weight:600}
+.sim-cell .n{font-family:var(--num);font-size:18px;font-weight:800;margin-top:2px}
+.sim-cell .d{font-size:11px;margin-top:2px;color:var(--muted)}
+.up{color:#2B8471}.down{color:#C4614F}
+
+/* ============ toast / modal ============ */
+.toast-wrap{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:calc(100% - 32px);max-width:420px}
+.toast{
+  background:rgba(34,54,47,.94);color:#fff;border-radius:13px;padding:11px 16px;font-size:13.5px;
+  box-shadow:0 10px 26px rgba(34,54,47,.22);animation:pop .22s ease;display:flex;gap:8px;align-items:center;
+  max-width:100%;
+}
+.toast svg{width:17px;height:17px;flex:0 0 17px}
+@keyframes pop{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:none}}
+.mask{
+  position:fixed;inset:0;background:rgba(34,54,47,.36);z-index:80;display:none;
+  align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(2px);
+}
+.mask.open{display:flex;animation:fade .18s ease}
+.dialog{
+  background:var(--card);border-radius:20px;width:100%;max-width:400px;padding:20px;
+  box-shadow:0 24px 60px rgba(34,54,47,.24);border:1px solid var(--line);
+}
+.dialog h3{margin:0 0 6px;font-size:17px}
+.dialog p{margin:0 0 14px;font-size:13.5px;color:var(--ink-2)}
+.dialog .acts{display:flex;gap:10px;margin-top:16px}
+.dialog .acts .btn{flex:1}
+
+/* mobile tab bar */
+.tabbar{display:none}
+@media (max-width:820px){
+  .app{display:block}
+  .sidebar{display:none}
+  .main{padding:16px 14px calc(86px + env(safe-area-inset-bottom));max-width:none}
+  .page-title{font-size:19px}
+  .topbar{margin-bottom:12px}
+  .wallet-chip{padding:7px 11px;font-size:12px}
+  .card{padding:15px;border-radius:16px}
+  .tabbar{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:70;
+    background:rgba(255,253,248,.96);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 18px rgba(74,97,87,.06);
+  }
+  .tab-item{
+    flex:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 2px;min-height:52px;border-radius:12px;color:var(--muted);cursor:pointer;
+    font-size:10.5px;font-weight:700;
+  }
+  .tab-item svg{width:22px;height:22px}
+  .tab-item.active{color:var(--mint-deep);background:var(--mint-soft)}
+  .stat .big{font-size:22px}
+  .tablewrap::after{content:""}
+}
+@media (max-width:380px){
+  .tab-item{font-size:9.5px}
+  .nav-item{font-size:13.5px}
+}
+
+/* print-free misc */
+.empty{padding:20px;text-align:center;color:var(--muted);font-size:13px}
+.ex-banner{
+  display:flex;gap:10px;align-items:flex-start;border-radius:14px;padding:11px 13px;
+  background:#FFF6E6;border:1px solid #F2DFBC;font-size:12.5px;color:#8A6A33;margin-bottom:14px;line-height:1.55;
+}
+.ex-banner svg{width:18px;height:18px;flex:0 0 18px;color:#C08B33;margin-top:1px}
+.ex-banner b{color:#8A5E1E}
+.mini-tag-ex{font-size:9.5px;background:#FBE9C8;color:#9A6E22;border-radius:6px;padding:0 5px;font-weight:800;vertical-align:1px;margin-left:4px}
+</style>
+</head>
+<body>
+<!-- SVG sprite: all icons inline -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-4v-6h-5v6h-4A1.5 1.5 0 0 1 4 19z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4l10-10a2.5 2.5 0 0 0-3.5-3.5L4.5 16.5 4 20z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.5 6.8 17 10.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3.2" y="6" width="17.6" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 9.5h17" stroke="currentColor" stroke-width="1.8"/><circle cx="16.6" cy="14.2" r="1.3" fill="currentColor"/><path d="M6 6V5.2A1.6 1.6 0 0 1 7.6 3.6h8.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="7.8" y="5.8" width="8.4" height="3.6" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="13" r="1.1" fill="currentColor"/><circle cx="12" cy="13" r="1.1" fill="currentColor"/><circle cx="15" cy="13" r="1.1" fill="currentColor"/><circle cx="9" cy="16.5" r="1.1" fill="currentColor"/><circle cx="12" cy="16.5" r="1.1" fill="currentColor"/><circle cx="15" cy="16.5" r="1.1" fill="currentColor"/></symbol>
+    <symbol id="i-pig" viewBox="0 0 24 24"><ellipse cx="11.6" cy="12.8" rx="8" ry="6.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7.4 7.4 6.2 4.4l3.3 1.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="15.4" cy="11.6" r="1.05" fill="currentColor"/><path d="M19.3 12.6c1.3.2 2.2.8 2.2 1.5s-1 1.3-2.3 1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M6.6 17.2v2.2M9.2 17.4v2M13 17.4v2M15.6 17.2v2.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="12.4" y="5.6" width="3.4" height="1.2" rx=".6" fill="currentColor"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.5 1.6H4.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.8 20.4a2.4 2.4 0 0 0 4.4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.6V12l3.2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 10.5h16M7.5 17v2M16.5 17v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8.2" cy="13.6" r="1" fill="currentColor"/><circle cx="15.8" cy="13.6" r="1" fill="currentColor"/></symbol>
+    <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M5 9h10v6a5 5 0 0 1-10 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15 10.5h1.6a2.4 2.4 0 0 1 0 4.8H15" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 20h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 6.2c0-1 .9-1.2.9-2.2M11.5 6.2c0-1 .9-1.2.9-2.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-food" viewBox="0 0 24 24"><path d="M4 11.5h16a8 8 0 0 1-16 0z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M2.8 19.6h18.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9 7.6c0-1 .8-1.2.8-2.2M13.2 7.6c0-1 .8-1.2.8-2.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-shopping" viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a1.6 1.6 0 0 1-1.6 1.4H7.8a1.6 1.6 0 0 1-1.6-1.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.6 8V6.6a3.4 3.4 0 0 1 6.8 0V8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-house" viewBox="0 0 24 24"><path d="M4 10.2 12 4l8 6.2V19a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 19z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 20.4v-5h4v5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6.6" y="2.6" width="10.8" height="18.8" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.4 5.4h3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="18.2" r="1" fill="currentColor"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3.6" y="8.6" width="16.8" height="4.4" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 13v7h14v-7M12 8.6V20" stroke="currentColor" stroke-width="1.8"/><path d="M12 8.6C10.2 8.6 7.6 8.2 7.6 6.2a2 2 0 0 1 4-.4c.2.9.4 1.9.4 2.8zM12 8.6c1.8 0 4.4-.4 4.4-2.4a2 2 0 0 0-4-.4c-.2.9-.4 1.9-.4 2.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="18" cy="12" r="1.7" fill="currentColor"/></symbol>
+    <symbol id="i-med" viewBox="0 0 24 24"><rect x="3.8" y="7.4" width="16.4" height="12.2" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.8 7.4V5.8a1.6 1.6 0 0 1 1.6-1.6h3.2a1.6 1.6 0 0 1 1.6 1.6v1.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5M9.5 13.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19.2V4.8M4 19.2h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7.6 15.6 11.2 11l3 2.6 4-5.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="19.4" cy="8.2" r="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M5 7h9M18 7h1M5 17h3M12 17h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v10.4M8.2 11l3.8 3.8L15.8 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 18.4v1.2h14.8v-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16.4V6M8.2 9.6 12 5.8l3.8 3.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 18.4v1.2h14.8v-1.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.8 6.8h14.4M9.4 6.8V4.6h5.2v2.2M7 6.8l.9 12.4a1.6 1.6 0 0 0 1.6 1.5h5a1.6 1.6 0 0 0 1.6-1.5L17 6.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.6 4.4 4.4L19 7.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="m9 5.5 7 6.5-7 6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M19.4 4.6C11 4.4 5 8.4 4.6 15.2c-.1 1.6.4 3 .4 3s1.5.3 3.2.1c6.6-.6 10.6-6.3 11.2-13.7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5.6 18.4C8 13 12 9.6 16.4 7.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></symbol>
+    <symbol id="i-coins" viewBox="0 0 24 24"><ellipse cx="9" cy="7" rx="5.4" ry="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.6 7v4c0 1.4 2.4 2.6 5.4 2.6s5.4-1.2 5.4-2.6V7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.6 16.4c.9 1.2 2.9 2 5.2 2 3 0 5.4-1.2 5.4-2.6v-4c0-1.3-2-2.4-4.6-2.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3.4c.7 4.4 2.4 6.1 6.8 6.8-4.4.7-6.1 2.4-6.8 6.8-.7-4.4-2.4-6.1-6.8-6.8 4.4-.7 6.1-2.4 6.8-6.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M18.6 16.4c.3 1.8 1 2.5 2.8 2.8-1.8.3-2.5 1-2.8 2.8-.3-1.8-1-2.5-2.8-2.8 1.8-.3 2.5-1 2.8-2.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v5.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.2" fill="currentColor"/></symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24"><path d="M19.4 12a7.4 7.4 0 0 1-12.6 5.2M4.6 12A7.4 7.4 0 0 1 17.2 6.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M17 3.6v3.4h-3.4M7 20.4v-3.4h3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.4 14.8A8 8 0 0 1 9.2 4.6a8 8 0 1 0 10.2 10.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.8" y="5.4" width="16.4" height="14.8" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 10h16.4M8.4 3.6v3.4M15.6 3.6v3.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-badge">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <ellipse cx="15" cy="18.5" rx="11" ry="8.4" fill="#F9CFC6" stroke="#3AA98C" stroke-width="1.6"/>
+          <path d="M9 11.5 7.4 7.6l4.3 1.4" fill="#F9CFC6" stroke="#3AA98C" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M24.6 16.4c1.8.2 3 .9 3 1.8s-1.2 1.7-3 1.9" fill="#F9CFC6" stroke="#3AA98C" stroke-width="1.6"/>
+          <circle cx="20" cy="16.6" r="1.3" fill="#3AA98C"/>
+          <rect x="16.4" y="9.6" width="4" height="1.6" rx=".8" fill="#3AA98C"/>
+          <path d="M8.6 24v2.6M11.8 24.4V27M18 24.4V27M21.4 24v2.6" stroke="#3AA98C" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">打工人小账本</div>
+        <div class="brand-sub">Work · Wallet</div>
+      </div>
+    </div>
+    <button class="nav-item active" data-view="home"><svg><use href="#i-home"/></svg>今日首页</button>
+    <button class="nav-item" data-view="ledger"><svg><use href="#i-pen"/></svg>10 秒记账</button>
+    <button class="nav-item" data-view="month"><svg><use href="#i-wallet"/></svg>本月账本</button>
+    <button class="nav-item" data-view="rate"><svg><use href="#i-calc"/></svg>真实时薪</button>
+    <button class="nav-item" data-view="piggy"><svg><use href="#i-pig"/></svg>小猪存钱罐</button>
+    <button class="nav-item" data-view="sim"><svg><use href="#i-sliders"/></svg>情景模拟</button>
+    <button class="nav-item" data-view="data"><svg><use href="#i-sync"/></svg>数据管理</button>
+    <div class="sidebar-foot">
+      <div><b>离线运行</b> · 数据只存在本机浏览器</div>
+      <div>建议每周导出一次 JSON 备份</div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 class="page-title" id="pageTitle">今日首页</h1>
+        <div class="page-sub" id="pageSub">--</div>
+      </div>
+      <div class="wallet-chip" title="当前真实时薪">
+        <svg><use href="#i-clock"/></svg>时薪 <b id="topRate">¥0</b>/h
+      </div>
+    </div>
+
+    <!-- ---------- HOME ---------- -->
+    <section class="view active" id="view-home">
+      <div id="exBannerHome"></div>
+
+      <div class="today card" style="padding:16px 18px">
+        <div class="today-head">
+          <svg><use href="#i-bell"/></svg>今天要处理
+          <span class="today-date" id="todayDate"></span>
+        </div>
+        <div id="todayList"></div>
+      </div>
+
+      <div class="grid g3" style="margin-top:14px">
+        <div class="stat accent">
+          <div class="lbl"><svg><use href="#i-clock"/></svg>真实时薪</div>
+          <div class="big"><span id="hRate">--</span><small>元/小时</small></div>
+          <div class="sub" id="hRateSub">按当前薪资参数计算</div>
+        </div>
+        <div class="stat">
+          <div class="lbl"><svg><use href="#i-wallet"/></svg>本月可用结余</div>
+          <div class="big"><span id="hBalance">--</span><small>元</small></div>
+          <div class="sub" id="hBalanceSub">收入 − 固定 − 弹性</div>
+        </div>
+        <div class="stat warm">
+          <div class="lbl"><svg><use href="#i-coins"/></svg>每一笔的意义</div>
+          <div class="big" style="font-size:17px;line-height:1.5;margin-top:8px" id="hInsight">--</div>
+          <div class="sub">记账后立刻换算成工作时间</div>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:14px;align-items:start">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><svg><use href="#i-pen"/></svg>最近 4 笔记录</div>
+            <button class="btn btn-sm" data-go="ledger">记一笔<svg><use href="#i-arrow"/></svg></button>
+          </div>
+          <div class="rec-list" id="homeRecent"></div>
+          <div id="homeRecentMore" style="margin-top:10px"></div>
+        </div>
+        <div class="card" style="background:linear-gradient(160deg,#FBFDF9,#FDF7EC)">
+          <div class="card-head">
+            <div class="card-title"><svg><use href="#i-pig"/></svg>小猪存钱罐</div>
+            <span class="card-hint" id="pigHint">自由基金</span>
+          </div>
+          <div class="pig-wrap" id="homePigArt"></div>
+          <div id="homePigProgress"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- LEDGER ---------- -->
+    <section class="view" id="view-ledger">
+      <div id="exBannerLedger"></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-pen"/></svg>10 秒记一笔</div>
+          <span class="card-hint">金额 → 分类 → 保存</span>
+        </div>
+
+        <div class="field">
+          <div class="field-label"><svg style="width:14px;height:14px;color:var(--mint-deep)"><use href="#i-coins"/></svg>金额（元）</div>
+          <input type="number" id="inAmt" inputmode="decimal" step="0.01" min="0" placeholder="0.00" autocomplete="off">
+          <div class="quick-amt" id="quickAmt"></div>
+        </div>
+
+        <div class="field" style="margin-top:14px">
+          <div class="field-label">花在哪儿 <span class="tip">点一下就好</span></div>
+          <div class="chips" id="catChips"></div>
+        </div>
+
+        <div class="field" style="margin-top:14px">
+          <div class="field-label">备注 <span class="tip">可不填</span></div>
+          <input type="text" id="inNote" maxlength="30" placeholder="例如：楼下冰美式">
+        </div>
+
+        <div class="worktime" id="workPreview">
+          <div class="wt-lbl"><svg><use href="#i-clock"/></svg>换算成工作时间</div>
+          <div class="wt-big" id="wtBig">—</div>
+          <div class="wt-note" id="wtNote">输入金额后实时换算（按真实时薪）</div>
+        </div>
+
+        <div class="row" style="margin-top:14px">
+          <button class="btn btn-primary" id="btnSave" style="flex:2"><svg><use href="#i-check"/></svg>保存这笔</button>
+          <button class="btn" id="btnReset">重填</button>
+        </div>
+        <div class="help" style="margin-top:8px">保存后立刻出现在首页最近记录里，并自动计入本月弹性支出。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-pen"/></svg>今天的记录</div>
+          <span class="card-hint" id="todayLedgerSum"></span>
+        </div>
+        <div class="rec-list" id="todayRecords"></div>
+      </div>
+    </section>
+
+    <!-- ---------- MONTH ---------- -->
+    <section class="view" id="view-month">
+      <div id="exBannerMonth"></div>
+      <div class="grid g3">
+        <div class="stat accent">
+          <div class="lbl"><svg><use href="#i-wallet"/></svg>月度收入（到手）</div>
+          <div class="big" id="mIncome">--</div>
+          <div class="sub" id="mIncomeSub">--</div>
+        </div>
+        <div class="stat blush">
+          <div class="lbl"><svg><use href="#i-house"/></svg>固定支出</div>
+          <div class="big" id="mFixed">--</div>
+          <div class="sub" id="mFixedSub">房租 / 通勤 / 订阅等</div>
+        </div>
+        <div class="stat warm">
+          <div class="lbl"><svg><use href="#i-coffee"/></svg>弹性支出</div>
+          <div class="big" id="mFlex">--</div>
+          <div class="sub" id="mFlexSub">本月已记 -- 笔</div>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:14px;align-items:start">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><svg><use href="#i-wallet"/></svg>月度总结</div>
+            <span class="card-hint" id="mMonthLabel"></span>
+          </div>
+          <div id="mSummary"></div>
+          <div style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px">
+              <span>弹性预算使用率</span><span id="mBudgetPct" class="num">--</span>
+            </div>
+            <div class="bar"><i id="mBudgetBar" style="width:0%"></i></div>
+            <div class="help" id="mBudgetNote" style="margin-top:6px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><svg><use href="#i-chart"/></svg>弹性支出构成</div>
+            <span class="card-hint">共 <b id="mCatCount">0</b> 个分类</span>
+          </div>
+          <div id="mCatBreak"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-pen"/></svg>本月全部记录</div>
+          <span class="card-hint">按天倒序</span>
+        </div>
+        <div id="mAllRecords"></div>
+      </div>
+    </section>
+
+    <!-- ---------- RATE ---------- -->
+    <section class="view" id="view-rate">
+      <div class="card" style="background:linear-gradient(120deg,#EAF7F1,#FDFAF3 62%,#FDF0E2)">
+        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:12.5px;color:var(--ink-2);font-weight:700;display:flex;gap:6px;align-items:center"><svg style="width:15px;height:15px;color:var(--mint-deep)"><use href="#i-calc"/></svg>你的真实时薪</div>
+            <div class="num" style="font-size:42px;font-weight:800;letter-spacing:-1.4px;color:var(--mint-deep);line-height:1.1;margin-top:4px"><span id="rBig">--</span><span style="font-size:16px;font-weight:700;letter-spacing:0"> 元/小时</span></div>
+            <div style="font-size:13px;color:var(--ink-2);margin-top:6px" id="rBigNote">--</div>
+          </div>
+          <div class="pig-wrap" style="flex:0 0 190px" id="ratePig"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-sliders"/></svg>薪资与时间参数</div>
+          <span class="card-hint">改动即算，无需保存</span>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>综合到手月薪（元）</label>
+            <input type="number" id="pSalary" inputmode="decimal" step="100" min="0">
+            <div class="help">税后、扣完五险一金的实发</div>
+          </div>
+          <div class="field">
+            <label>一年发薪月数</label>
+            <select id="pMonths">
+              <option value="12">12 个月</option>
+              <option value="13">13 个月（含年终）</option>
+              <option value="14">14 个月</option>
+              <option value="15">15 个月</option>
+            </select>
+            <div class="help">月薪 × 月数 ÷ 12 = 月均</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div class="field">
+            <label>每个工作日在场时长（含午休，小时）</label>
+            <input type="number" id="pAtWork" inputmode="decimal" step="0.5" min="1" max="24">
+          </div>
+          <div class="field">
+            <label>每月平均加班（小时）</label>
+            <input type="number" id="pOvertime" inputmode="decimal" step="1" min="0" max="300">
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div class="field">
+            <label>单程通勤（分钟）</label>
+            <input type="number" id="pCommute" inputmode="decimal" step="5" min="0" max="300">
+          </div>
+          <div class="field">
+            <label>每月工作日（天）</label>
+            <input type="number" id="pWorkdays" inputmode="decimal" step="0.5" min="1" max="31">
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div class="field">
+            <label>每月固定工作成本（元）</label>
+            <input type="number" id="pFixedCost" inputmode="decimal" step="10" min="0">
+            <div class="help">通勤费 + 工作餐 + 工装 + 咖啡，纯为上班花的钱</div>
+          </div>
+          <div class="field">
+            <label>每月弹性（自主）支出（元）</label>
+            <input type="number" id="pFlex" inputmode="decimal" step="10" min="0">
+            <div class="help">本月记账里的弹性支出；留 0 则按手动值</div>
+          </div>
+        </div>
+
+        <details class="details" style="margin-top:14px" open>
+          <summary><svg><use href="#i-arrow"/></svg>展开计算过程</summary>
+          <div class="details-body">
+            <div class="formula" id="rFormula"></div>
+            <div class="kv" style="margin-top:10px"><span class="k">折算月均到手（12 个月摊平）</span><span class="v" id="rAvgMonth">--</span></div>
+            <div class="kv"><span class="k">每月扣除的工作成本</span><span class="v red" id="rCost">--</span></div>
+            <div class="kv"><span class="k">每月在场总时长（含通勤）</span><span class="v" id="rHours">--</span></div>
+            <div class="kv"><span class="k">真实时薪 = 净到手 ÷ 场总时长</span><span class="v mint" id="rHourly">--</span></div>
+          </div>
+        </details>
+        <details class="details">
+          <summary><svg><use href="#i-arrow"/></svg>为什么算"在场总时长"？</summary>
+          <div class="details-body help">
+            只按 8 小时算时薪会让人自我感觉良好，因为通勤、午休、加班都在消耗你。把「必须在公司的总时间」放进分母，才是这份工作真正的时间价格。<br>
+            工作成本也一并扣掉：为了上班而花掉的交通、餐费、工装，本质是工作的负收入。<br>
+            币值参照：一杯 25 元的奶茶 ≈ 按真实时薪换算的几个小时，而不是"半小时工资"。
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-coins"/></svg>这些钱值几个小时</div>
+          <span class="card-hint">按上面算出的真实时薪</span>
+        </div>
+        <div class="grid g3" id="rPriceCards"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PIGGY ---------- -->
+    <section class="view" id="view-piggy">
+      <div id="exBannerPig"></div>
+      <div class="grid g2" style="align-items:stretch">
+        <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(165deg,#FBFDF9,#FDF6EA)">
+          <div class="card-head">
+            <div class="card-title"><svg><use href="#i-pig"/></svg>自由基金存钱罐</div>
+            <span class="card-hint" id="piggyRateHint"></span>
+          </div>
+          <div class="pig-wrap" id="bigPigArt"></div>
+          <div id="piggyProgress"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title"><svg><use href="#i-target"/></svg>目标设置</div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>已存金额（元）</label>
+              <input type="number" id="fSaved" inputmode="decimal" step="100" min="0">
+            </div>
+            <div class="field">
+              <label>目标金额（元）</label>
+              <input type="number" id="fGoal" inputmode="decimal" step="500" min="0">
+            </div>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <div class="field">
+              <label>每月计划存入（元）</label>
+              <input type="number" id="fMonthly" inputmode="decimal" step="100" min="0">
+            </div>
+            <div class="field">
+              <label>目标用途</label>
+              <input type="text" id="fName" maxlength="20" placeholder="例如：那台相机">
+            </div>
+          </div>
+          <div class="kv" style="margin-top:14px"><span class="k">按计划还需</span><span class="v mint" id="fMonths">--</span></div>
+          <div class="kv"><span class="k">折合真实工作时间</span><span class="v" id="fHours">--</span></div>
+          <div class="kv"><span class="k">按每天省 1 杯咖啡推进</span><span class="v" id="fCoffee">--</span></div>
+          <div class="row" style="margin-top:14px">
+            <button class="btn btn-soft" id="btnSaveGoal"><svg><use href="#i-check"/></svg>保存目标</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-leaf"/></svg>安全垫（紧急备用金）</div>
+          <span class="card-hint">建议 3–6 个月固定支出</span>
+        </div>
+        <div class="grid g3">
+          <div class="stat">
+            <div class="lbl"><svg><use href="#i-coins"/></svg>现有安全垫</div>
+            <div class="big"><span id="sSaved">--</span><small>元</small></div>
+            <div class="sub" id="sMonths">可支撑 -- 个月</div>
+          </div>
+          <div class="stat">
+            <div class="lbl"><svg><use href="#i-target"/></svg>建议目标（3 个月）</div>
+            <div class="big"><span id="sTarget3">--</span><small>元</small></div>
+            <div class="sub">只覆盖固定支出</div>
+          </div>
+          <div class="stat accent">
+            <div class="lbl"><svg><use href="#i-sparkle"/></svg>更稳目标（6 个月）</div>
+            <div class="big"><span id="sTarget6">--</span><small>元</small></div>
+            <div class="sub" id="sGap">还差 --</div>
+          </div>
+        </div>
+        <div style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px">
+            <span>3 个月安全垫进度</span><span id="sPct" class="num">--</span>
+          </div>
+          <div class="bar"><i id="sBar" style="width:0%"></i></div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <div class="field">
+            <label>更新安全垫（元）</label>
+            <input type="number" id="sSavedIn" inputmode="decimal" step="100" min="0">
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end">
+            <button class="btn btn-soft btn-block" id="btnSaveSafe"><svg><use href="#i-check"/></svg>保存</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-chart"/></svg>存款曲线</div>
+          <span class="card-hint">过去 · 现在 · 未来 6 个月</span>
+        </div>
+        <div class="chart-box" id="savingsChart"></div>
+        <div class="legend">
+          <span><i style="background:#3AA98C"></i>实际存款</span>
+          <span><i style="background:#F2C27E"></i>按计划预测</span>
+          <span><i style="background:#F6A9A0"></i>自由基金目标线</span>
+        </div>
+        <div class="help" style="margin-top:8px" id="chartNote"></div>
+      </div>
+    </section>
+
+    <!-- ---------- SIM ---------- -->
+    <section class="view" id="view-sim">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-sliders"/></svg>情景模拟</div>
+          <span class="card-hint">拖动看看，钱和时间怎么变</span>
+        </div>
+        <div class="seg" id="simSeg">
+          <button data-sim="commute" class="on">换租房 / 通勤</button>
+          <button data-sim="overtime">加班变多</button>
+          <button data-sim="raise">涨薪</button>
+        </div>
+
+        <div id="simControls" style="margin-top:16px"></div>
+
+        <div class="sim-out" style="margin-top:16px" id="simOut"></div>
+        <div class="formula" style="margin-top:14px" id="simFormula"></div>
+        <div class="help" style="margin-top:10px" id="simNote"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-chart"/></svg>三种情景对比</div>
+          <span class="card-hint">相对当前状态</span>
+        </div>
+        <div class="tablewrap" id="simTable"></div>
+      </div>
+    </section>
+
+    <!-- ---------- DATA ---------- -->
+    <section class="view" id="view-data">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-sync"/></svg>数据备份与恢复</div>
+          <span class="card-hint" id="dataCount"></span>
+        </div>
+        <div class="grid g2">
+          <button class="btn btn-soft" id="btnExport" style="min-height:52px"><svg><use href="#i-download"/></svg>导出 JSON 备份</button>
+          <button class="btn btn-soft" id="btnExportCsv" style="min-height:52px"><svg><use href="#i-download"/></svg>导出记账 CSV</button>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <label class="btn" style="min-height:52px;cursor:pointer" for="fileImport"><svg><use href="#i-upload"/></svg>从 JSON 恢复（导入）</label>
+          <input type="file" id="fileImport" accept=".json,application/json" style="display:none">
+        </div>
+        <div class="help" style="margin-top:8px">导入会整体替换当前数据，并自动保留一份"导入前快照"；支持上千条记录，不限条数。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-trash"/></svg>清理示例数据</div>
+        </div>
+        <div class="help" style="margin-bottom:12px" id="dataSampleStat">--</div>
+        <div class="row">
+          <button class="btn" id="btnClearSample">只删除示例记录</button>
+          <button class="btn btn-danger" id="btnClearAll">清空全部数据</button>
+        </div>
+        <div class="help" style="margin-top:8px">示例数据都带 <span class="mini-tag-ex">示例</span> 标记，删除后不会影响你自己记的账。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-info"/></svg>关于这个小账本</div>
+        </div>
+        <div class="help" style="line-height:1.9">
+          · 单文件离线运行：所有样式、脚本、图标都内联在同一个 HTML 里，断网可用，不依赖 CDN。<br>
+          · 数据只保存在当前浏览器的 localStorage，不上传服务器；换设备请用「导出 JSON」迁移。<br>
+          · 时薪公式：净到手（月薪 × 发薪月数 ÷ 12 − 工作成本）÷ 每月在场总时长（在场 + 加班 + 往返通勤）。<br>
+          · 记账换算：金额 ÷ 真实时薪 = 需要工作的小时数。
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- mobile tabbar -->
+<nav class="tabbar" id="tabbar">
+  <button class="tab-item active" data-view="home"><svg><use href="#i-home"/></svg>首页</button>
+  <button class="tab-item" data-view="ledger"><svg><use href="#i-pen"/></svg>记账</button>
+  <button class="tab-item" data-view="month"><svg><use href="#i-wallet"/></svg>本月</button>
+  <button class="tab-item" data-view="rate"><svg><use href="#i-calc"/></svg>时薪</button>
+  <button class="tab-item" data-view="piggy"><svg><use href="#i-pig"/></svg>存钱</button>
+  <button class="tab-item" data-view="sim"><svg><use href="#i-sliders"/></svg>模拟</button>
+</nav>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="mask" id="mask">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <h3 id="dlgTitle">确认</h3>
+    <p id="dlgText"></p>
+    <div class="acts">
+      <button class="btn" id="dlgCancel">取消</button>
+      <button class="btn btn-primary" id="dlgOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   打工人小账本 · 单文件离线工作台
+   分层：数据层(state/storage) → 计算层(compute*) → 渲染层(render*)
+   渲染函数之间禁止互调，统一由 refreshAll() 调度
+   ========================================================= */
+(function () {
+  'use strict';
+
+  /* ---------------- 常量 ---------------- */
+  var KEY = 'wb_work_piggy_v1';
+  var APP = '打工人小账本';
+
+  var CATS = [
+    { id: 'food',    name: '吃饭',   icon: 'i-food',     color: '#3AA98C' },
+    { id: 'coffee',  name: '咖啡奶茶', icon: 'i-coffee',  color: '#6EC6AE' },
+    { id: 'transit', name: '通勤',   icon: 'i-bus',      color: '#7FB6D8' },
+    { id: 'shop',    name: '购物',   icon: 'i-shopping', color: '#F2C27E' },
+    { id: 'home',    name: '住房水电', icon: 'i-house',  color: '#E8B48F' },
+    { id: 'phone',   name: '话费订阅', icon: 'i-phone',  color: '#B7A6D9' },
+    { id: 'fun',     name: '娱乐',   icon: 'i-gift',     color: '#F6A9A0' },
+    { id: 'health',  name: '医疗健康', icon: 'i-med',    color: '#9BCB8F' },
+    { id: 'other',   name: '其他',   icon: 'i-more',     color: '#A8B3AB' }
+  ];
+  // 这些分类记为固定支出（每月必然发生），其余记为弹性支出
+  var FIXED_CATS = { home: 1, phone: 1 };
+
+  var QUICK = [9.9, 15, 25, 35, 58, 99];
+
+  var VIEWS = {
+    home:   { title: '今日首页', sub: '今天要处理的事 + 最近记账 + 存钱罐进度' },
+    ledger: { title: '10 秒记账', sub: '记完立刻知道这笔花掉了你多少工作时间' },
+    month:  { title: '本月账本', sub: '收入、固定支出、弹性支出与预算' },
+    rate:   { title: '真实时薪', sub: '把通勤和加班算进去，看看你真正的时间价格' },
+    piggy:  { title: '小猪存钱罐', sub: '自由基金目标 + 安全垫 + 存款曲线' },
+    sim:    { title: '情景模拟', sub: '换租房、加班、涨薪，分别值多少' },
+    data:   { title: '数据管理', sub: '导出 / 导入 / 清理示例数据' }
+  };
+
+  var DEFAULT_SETTINGS = {
+    salary: 11000,
+    months: 12,
+    atWork: 9,
+    overtime: 18,
+    commute: 45,
+    workdays: 21,
+    fixedCost: 780,
+    flexBudget: 3200,
+    monthlySaving: 1500
+  };
+
+  var SAMPLE_HISTORY = [3500, 4200, 5000, 6300, 7100, 7900]; // 6 个月前 → 1 个月前
+  var SAMPLE_RECORDS = [
+    { d: 0,  amt: 28, cat: 'food',  note: '公司楼下快餐' },
+    { d: 0,  amt: 22, cat: 'coffee', note: '冰美式' },
+    { d: 1,  amt: 62, cat: 'shop',  note: '收纳盒 · 桌面改造' },
+    { d: 2,  amt: 15, cat: 'transit', note: '地铁卡充值' },
+    { d: 3,  amt: 45, cat: 'food',  note: '加班点的外卖' },
+    { d: 5,  amt: 180, cat: 'home', note: '本月水电燃气' },
+    { d: 8,  amt: 129, cat: 'fun',  note: '电影票 + 爆米花' },
+    { d: 12, amt: 48, cat: 'coffee', note: '和同事拼单奶茶' },
+    { d: 15, amt: 25, cat: 'transit', note: '共享单车月卡' },
+    { d: 18, amt: 320, cat: 'shop', note: '换季买了一件外套' }
+  ];
+
+  /* ---------------- 工具 ---------------- */
+  function $(id) { return document.getElementById(id); }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function todayStr() { return ymd(new Date()); }
+  function addDays(base, n) { var d = new Date(base.getTime()); d.setDate(d.getDate() + n); return d; }
+  function daysInMonth(y, m) { return new Date(y, m + 1, 0).getDate(); }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function money(n) {
+    if (!isFinite(n)) n = 0;
+    var neg = n < 0;
+    n = Math.abs(n);
+    var s = n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return (neg ? '-' : '') + '¥' + s;
+  }
+  function money2(n) {
+    if (!isFinite(n)) n = 0;
+    return '¥' + n.toFixed(2);
+  }
+  function plain(n) {
+    if (!isFinite(n)) n = 0;
+    var r = Math.round(n * 100) / 100;
+    return String(r);
+  }
+  function hoursText(h) {
+    if (!isFinite(h) || h <= 0) return '0 分钟';
+    var mins = Math.round(h * 60);
+    if (mins < 60) return mins + ' 分钟';
+    var hh = Math.floor(mins / 60);
+    var mm = mins % 60;
+    if (hh >= 24) {
+      var dd = Math.floor(hh / 24);
+      return dd + ' 天 ' + (hh % 24) + ' 小时';
+    }
+    return mm === 0 ? hh + ' 小时' : hh + ' 小时 ' + mm + ' 分';
+  }
+  function segHourText(h) {
+    if (h < 1) return '约 ' + Math.round(h * 60) + ' 分钟';
+    return '约 ' + (Math.round(h * 10) / 10) + ' 小时';
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function catOf(id) {
+    for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i];
+    return CATS[CATS.length - 1];
+  }
+  function icon(id, cls) {
+    return '<svg class="' + (cls || '') + '"><use href="#' + id + '"/></svg>';
+  }
+  function monthKey(str) { return String(str).slice(0, 7); }
+  function weekdayCN(d) { return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()]; }
+
+  /* ---------------- 数据层 ---------------- */
+  var state = null;
+
+  function defaultState() {
+    var t = new Date();
+    var recs = SAMPLE_RECORDS.map(function (r, i) {
+      var d = addDays(t, -r.d);
+      if (d.getMonth() !== t.getMonth()) d = new Date(t.getFullYear(), t.getMonth(), 1);
+      return { id: 's' + i, date: ymd(d), amt: r.amt, cat: r.cat, note: r.note, sample: true, ts: d.getTime() + i };
+    });
+    var hist = SAMPLE_HISTORY.map(function (v, i) {
+      var d = new Date(t.getFullYear(), t.getMonth() - (6 - i), 1);
+      return { month: monthKey(ymd(d)), value: v, sample: true };
+    });
+    return {
+      version: 1,
+      settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
+      records: recs,
+      savings: { goal: 20000, saved: 7900, monthly: 1500, name: '那台相机', safe: 25000 },
+      history: hist,
+      sim: { commute: 45, overtime: 18, raise: 0 },
+      meta: { createdAt: Date.now(), lastBackupHint: false }
+    };
+  }
+
+  // 容错读取：任何字段缺失都回落到默认值，绝不让页面白屏
+  function sanitize(raw) {
+    var base = defaultState();
+    if (!raw || typeof raw !== 'object') return base;
+    var out = { version: 1 };
+    var st = raw.settings && typeof raw.settings === 'object' ? raw.settings : {};
+    out.settings = {};
+    for (var k in DEFAULT_SETTINGS) {
+      var v = Number(st[k]);
+      out.settings[k] = isFinite(v) && st[k] !== null && st[k] !== '' ? v : DEFAULT_SETTINGS[k];
+    }
+    out.records = Array.isArray(raw.records) ? raw.records.filter(function (r) {
+      return r && r.date && isFinite(Number(r.amt));
+    }).map(function (r) {
+      return {
+        id: r.id || uid(), date: String(r.date).slice(0, 10),
+        amt: Math.max(0, Number(r.amt)), cat: catOf(r.cat).id,
+        note: String(r.note || '').slice(0, 40), sample: !!r.sample, ts: Number(r.ts) || Date.now()
+      };
+    }) : [];
+    var sv = raw.savings && typeof raw.savings === 'object' ? raw.savings : {};
+    out.savings = {};
+    ['goal', 'saved', 'monthly', 'safe'].forEach(function (k) {
+      var n3 = Number(sv[k]);
+      out.savings[k] = isFinite(n3) && n3 >= 0 ? n3 : base.savings[k];
+    });
+    out.savings.name = String(sv.name || base.savings.name).slice(0, 20);
+    out.history = Array.isArray(raw.history) ? raw.history.filter(function (h) {
+      return h && h.month && isFinite(Number(h.value));
+    }).map(function (h) {
+      return { month: String(h.month).slice(0, 7), value: Math.max(0, Number(h.value)), sample: !!h.sample };
+    }) : [];
+    var sm = raw.sim && typeof raw.sim === 'object' ? raw.sim : {};
+    out.sim = {
+      commute: isFinite(Number(sm.commute)) ? Number(sm.commute) : base.sim.commute,
+      overtime: isFinite(Number(sm.overtime)) ? Number(sm.overtime) : base.sim.overtime,
+      raise: isFinite(Number(sm.raise)) ? Number(sm.raise) : base.sim.raise
+    };
+    out.meta = raw.meta && typeof raw.meta === 'object' ? raw.meta : { createdAt: Date.now() };
+    return out;
+  }
+
+  function load() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { raw = null; }
+    if (!raw) {
+      state = defaultState();
+      save();
+      return;
+    }
+    state = sanitize(raw);
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+      return true;
+    } catch (e) {
+      toast('保存失败：浏览器存储空间已满，请先导出备份', 'i-info');
+      return false;
+    }
+  }
+
+  /* ---------------- 计算层 ---------------- */
+  // 时薪明细：全部从参数推导，纯函数
+  function computeRate(s, costOverride) {
+    s = s || state.settings;
+    var salary = Math.max(0, Number(s.salary) || 0);
+    var months = Math.max(1, Number(s.months) || 12);
+    var avgMonth = salary * months / 12;
+    var cost = costOverride == null ? Math.max(0, Number(s.fixedCost) || 0) : costOverride;
+    var net = avgMonth - cost;
+    var days = Math.max(1, Number(s.workdays) || 21);
+    var atWork = Math.max(0, Number(s.atWork) || 0);
+    var ot = Math.max(0, Number(s.overtime) || 0);
+    var commuteH = Math.max(0, Number(s.commute) || 0) / 60;
+    var dailyCommute = commuteH * 2;
+    var monthHours = atWork * days + ot + dailyCommute * days;
+    var hourly = monthHours > 0 ? net / monthHours : 0;
+    var otHourly = monthHours > 0 ? avgMonth / monthHours : 0;
+    return {
+      salary: salary, months: months, avgMonth: avgMonth, cost: cost, net: net,
+      days: days, atWork: atWork, ot: ot, commuteH: commuteH, dailyCommute: dailyCommute,
+      monthHours: monthHours, hourly: hourly, otHourly: otHourly,
+      perDay: days > 0 ? avgMonth / days : 0,
+      perMinute: hourly / 60
+    };
+  }
+
+  function recordsOfMonth(mk) {
+    return state.records.filter(function (r) { return monthKey(r.date) === mk; })
+      .sort(function (a, b) { return a.date < b.date ? 1 : (a.date > b.date ? -1 : b.ts - a.ts); });
+  }
+
+  function sumBy(recs, pred) {
+    return recs.reduce(function (t, r) { return pred(r) ? t + r.amt : t; }, 0);
+  }
+
+  function computeMonth() {
+    var t = new Date();
+    var mk = monthKey(ymd(t));
+    var recs = recordsOfMonth(mk);
+    var rate = computeRate();
+    var fixed = sumBy(recs, function (r) { return !!FIXED_CATS[r.cat]; });
+    var flex = sumBy(recs, function (r) { return !FIXED_CATS[r.cat]; });
+    var income = rate.avgMonth;
+    var catMap = {};
+    recs.forEach(function (r) {
+      if (FIXED_CATS[r.cat]) return;
+      catMap[r.cat] = (catMap[r.cat] || 0) + r.amt;
+    });
+    var cats = Object.keys(catMap).map(function (id) {
+      return { id: id, name: catOf(id).name, color: catOf(id).color, icon: catOf(id).icon, amt: catMap[id] };
+    }).sort(function (a, b) { return b.amt - a.amt; });
+    var dim = daysInMonth(t.getFullYear(), t.getMonth());
+    var dayIdx = t.getDate();
+    return {
+      key: mk, label: (t.getMonth() + 1) + ' 月', recs: recs,
+      income: income, fixed: fixed, flex: flex,
+      balance: income - fixed - flex,
+      budget: Math.max(0, Number(state.settings.flexBudget) || 0),
+      cats: cats, dim: dim, dayIdx: dayIdx,
+      avgPerDay: dayIdx > 0 ? flex / dayIdx : 0,
+      rate: rate
+    };
+  }
+
+  function computeStreak() {
+    // 连续记账天数（含今天则从今天算，否则从昨天算）
+    var set = {};
+    state.records.forEach(function (r) { set[r.date] = 1; });
+    var d = new Date();
+    if (!set[ymd(d)]) d = addDays(d, -1);
+    var n = 0;
+    while (set[ymd(d)] && n < 400) { n++; d = addDays(d, -1); }
+    return n;
+  }
+
+  function computeToday() {
+    var t = todayStr();
+    var recs = state.records.filter(function (r) { return r.date === t; })
+      .sort(function (a, b) { return b.ts - a.ts; });
+    var mk = computeMonth();
+    var rate = computeRate();
+    var items = [];
+    var itemsCount = 0;
+
+    // 1) 昨日及更早、且本月未补记的固定支出提醒
+    if (mk.fixed <= 0) {
+      items.push({
+        kind: 'warn', title: '本月固定支出还没记',
+        sub: '房租 / 水电 / 话费订阅，记上才能算准结余',
+        amt: '去补记', go: 'ledger'
+      });
+      itemsCount++;
+    }
+    // 2) 预算进度提醒
+    if (mk.budget > 0) {
+      var pct = mk.flex / mk.budget;
+      if (pct >= 1) {
+        items.push({
+          kind: 'warn', title: '弹性预算已超支 ' + Math.round((pct - 1) * 100) + '%',
+          sub: '剩下 ' + Math.max(0, mk.dim - mk.dayIdx) + ' 天，建议只记必要支出',
+          amt: money(mk.flex) + ' / ' + money(mk.budget), go: 'month'
+        });
+        itemsCount++;
+      } else if (pct >= 0.8) {
+        items.push({
+          kind: 'warn', title: '弹性预算已用掉 ' + Math.round(pct * 100) + '%',
+          sub: '还剩 ' + money(mk.budget - mk.flex) + '，折合 ' + segHourText((mk.budget - mk.flex) / rate.hourly) + ' 工作',
+          amt: money(mk.flex) + ' / ' + money(mk.budget), go: 'month'
+        });
+        itemsCount++;
+      }
+    }
+    // 3) 存钱罐本月是否有存入记录
+    var mkSavedRecord = state.history.filter(function (h) { return h.month === mk.key; })[0];
+    if (!mkSavedRecord && state.savings.monthly > 0) {
+      items.push({
+        kind: 'info', title: '本月自由基金还没存',
+        sub: '计划存 ' + money(state.savings.monthly) + '，存了才离「' + esc(state.savings.name) + '」更近一步',
+        amt: money(state.savings.monthly), go: 'piggy'
+      });
+      itemsCount++;
+    }
+    // 4) 安全垫不足 3 个月
+    var safeTarget = mk.fixed > 0 ? mk.fixed * 3 : rate.cost * 3 + 6000 * 0;
+    if (state.savings.safe < safeTarget && safeTarget > 0) {
+      items.push({
+        kind: 'warn', title: '安全垫还没到 3 个月',
+        sub: '还差 ' + money(safeTarget - state.savings.safe) + '，先攒够再谈自由基金',
+        amt: Math.round(state.savings.safe / Math.max(1, safeTarget) * 100) + '%', go: 'piggy'
+      });
+      itemsCount++;
+    }
+    // 5) 今天还没记账
+    if (recs.length === 0) {
+      items.push({
+        kind: 'info', title: '今天还没有记账',
+        sub: '记完第一笔就知道它花掉了多少工作时间',
+        amt: '记一笔', go: 'ledger'
+      });
+      itemsCount++;
+    } else {
+      items.push({
+        kind: 'info', title: '今日已记 ' + recs.length + ' 笔，合计 ' + money(sumBy(recs, function () { return true; })),
+        sub: '折合 ' + segHourText(sumBy(recs, function () { return true; }) / rate.hourly) + ' 工作时间',
+        amt: '已记录', ok: true, go: 'ledger'
+      });
+      itemsCount++;
+    }
+    // 6) 数据备份建议
+    var realCount = state.records.filter(function (r) { return !r.sample; }).length;
+    if (realCount >= 30) {
+      items.push({
+        kind: 'info', title: '已积累 ' + realCount + ' 条记录',
+        sub: '建议现在导出一次 JSON 备份，防止浏览器清理缓存',
+        amt: '去备份', go: 'data'
+      });
+      itemsCount++;
+    }
+    return { items: items, count: itemsCount, recs: recs };
+  }
+
+  function computeSavingsSeries(goal) {
+    // 以历史最高月份为基准做归一化，构造过去 6 个月 + 未来 6 个月的曲线
+    var t = new Date();
+    var pts = [];
+    var hist = {};
+    state.history.forEach(function (h) { hist[h.month] = h.value; });
+    var lastVal = null;
+    for (var i = 6; i >= 1; i--) {
+      var d = new Date(t.getFullYear(), t.getMonth() - i, 1);
+      var k = monthKey(ymd(d));
+      var v = null;
+      if (hist[k] != null) v = hist[k];
+      else if (lastVal == null) v = null;
+      else v = null;
+      if (v != null) lastVal = v;
+      pts.push({ label: (d.getMonth() + 1) + '月', value: v, type: v == null ? 'gap' : 'actual', idx: 6 - i });
+    }
+    pts.push({ label: '本月', value: state.savings.saved, type: 'now', idx: 6 });
+    var cur = state.savings.saved;
+    for (var j = 1; j <= 6; j++) {
+      var d2 = new Date(t.getFullYear(), t.getMonth() + j, 1);
+      cur = cur + Math.max(0, state.savings.monthly);
+      pts.push({ label: (d2.getMonth() + 1) + '月', value: cur, type: 'plan', idx: 6 + j });
+    }
+    var maxV = Math.max(goal || 0, state.savings.saved + state.savings.monthly * 6, 1);
+    var minV = 0;
+    pts.forEach(function (p) { if (p.value != null && p.value > maxV) maxV = p.value; });
+    return { pts: pts, max: maxV * 1.08, min: minV };
+  }
+
+  /* ---------------- 通用渲染件 ---------------- */
+  function pigSVG(scale, mood) {
+    // 小猪存钱罐：奶油粉 + 薄荷绿描边，随进度「鼓起」
+    var p = Math.max(0, Math.min(1, scale == null ? 0.5 : scale));
+    var coinY = 4 - p * 1.6;
+    return '' +
+    '<svg viewBox="0 0 220 180" role="img" aria-label="小猪存钱罐插画" style="width:100%;max-width:250px;height:auto">' +
+      '<ellipse cx="112" cy="160" rx="74" ry="9" fill="#E7EFE7" opacity=".55"/>' +
+      '<g>' +
+        '<path d="M40 96c0-30 30-52 70-52s70 22 70 52-30 50-70 50-70-20-70-50z" fill="#F9CFC6" stroke="#2B8471" stroke-width="2.6"/>' +
+        '<path d="M78 47c-3-11-11-19-22-22 1 13 6 22 14 27z" fill="#F9CFC6" stroke="#2B8471" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '<path d="M104 44c1-13 8-23 19-27-1 14-6 24-13 29z" fill="#F7C0B5" stroke="#2B8471" stroke-width="2.4" stroke-linejoin="round"/>' +
+        '<path d="M176 78c14 2 24 9 24 18s-10 16-24 18c-9 2-15-4-15-18s6-20 15-18z" fill="#F7C0B5" stroke="#2B8471" stroke-width="2.6" stroke-linejoin="round"/>' +
+        '<ellipse cx="182" cy="90" rx="3" ry="4.4" fill="#2B8471" opacity=".55"/>' +
+        '<ellipse cx="186" cy="102" rx="3" ry="4.4" fill="#2B8471" opacity=".55"/>' +
+        '<circle cx="150" cy="80" r="5.4" fill="#22362F"/>' +
+        '<circle cx="152" cy="78" r="1.8" fill="#fff"/>' +
+        '<ellipse cx="124" cy="106" rx="12" ry="8" fill="#F6A9A0" opacity=".55"/>' +
+        '<ellipse cx="92" cy="132" rx="12" ry="5" fill="#F6A9A0" opacity=".35"/>' +
+        '<rect x="118" y="44" width="24" height="7" rx="3.5" fill="#2B8471"/>' +
+        '<g>' +
+          '<circle cx="130" cy="' + coinY + '" r="0" fill="none"/>' +
+          '<ellipse cx="130" cy="41" rx="15" ry="5" fill="#FBE7B4" stroke="#D8A94A" stroke-width="1.8"/>' +
+          '<text x="130" y="' + (48 - p * 1.2) + '" font-size="11" font-weight="700" text-anchor="middle" fill="#B98A2C" font-family="monospace">¥</text>' +
+        '</g>' +
+        '<path d="M76 142v12M96 146v10M132 146v10M152 142v12" stroke="#2B8471" stroke-width="3" stroke-linecap="round"/>' +
+        (p > 0.6 ? '<path d="M84 60c6-6 14-9 22-10" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>' : '') +
+        (mood === 'happy' ? '<path d="M164 68l4 6 7 1-5 5 1 7-7-3-7 3 1-7-5-5 7-1z" fill="#F6C45B" opacity=".9"/>' : '') +
+      '</g>' +
+    '</svg>';
+  }
+
+  function recRow(r, opts) {
+    opts = opts || {};
+    var c = catOf(r.cat);
+    var h = state.ratePreview ? state.ratePreview.hourly : computeRate().hourly;
+    var wh = h > 0 ? r.amt / h : 0;
+    var d = new Date(r.date.replace(/-/g, '/'));
+    var dateTxt = r.date === todayStr() ? '今天' : (r.date.slice(5, 7) + '/' + r.date.slice(8, 10));
+    var html = '' +
+      '<div class="rec">' +
+        '<div class="rec-ico" style="background:' + c.color + '22">' + icon(c.icon) + '</div>' +
+        '<div class="rec-main">' +
+          '<div class="rec-t1">' + (r.note ? esc(r.note) : c.name) + (r.sample ? '<span class="mini-tag-ex">示例</span>' : '') + '</div>' +
+          '<div class="rec-t2"><span>' + esc(c.name) + '</span><span>·</span><span>' + dateTxt + '</span></div>' +
+        '</div>' +
+        '<div class="rec-right">' +
+          '<div class="rec-amt">' + money2(r.amt) + '</div>' +
+          '<div class="rec-work">' + segHourText(wh) + '</div>' +
+        '</div>' +
+        (opts.del ? '<button class="mini-del" data-del="' + r.id + '" title="删除这条" aria-label="删除">' + icon('i-trash') + '</button>' : '') +
+      '</div>';
+    return html;
+  }
+
+  function sampleBanner() {
+    var s = state.records.filter(function (r) { return r.sample; }).length;
+    if (s <= 0) return '';
+    return '<div class="ex-banner">' + icon('i-info', '') +
+      '<div>当前含 <b>' + s + ' 条示例记录</b>与示例存钱数据（标有 <span class="mini-tag-ex">示例</span>），日期相对今天生成，用来演示效果。开始正式记录前，可在「数据管理」一键清理。</div></div>';
+  }
+
+  /* ---------------- 首页 ---------------- */
+  function renderHome() {
+    var t = new Date();
+    $('todayDate').textContent = (t.getMonth() + 1) + ' 月 ' + t.getDate() + ' 日 · ' + weekdayCN(t);
+    var td = computeToday();
+    var html = '';
+    if (td.items.length === 0) {
+      html = '<div class="today-quiet">' + icon('i-check') + '一切就绪，安心上班。</div>';
+    } else {
+      td.items.slice(0, 4).forEach(function (it) {
+        html += '<div class="today-item ' + (it.kind === 'warn' ? 'warn' : '') + '">' +
+          '<span class="dot"></span>' +
+          '<div class="ti-main"><div>' + esc(it.title) + '</div><div class="ti-sub">' + esc(it.sub) + '</div></div>' +
+          '<span class="ti-amt ' + (it.ok ? 'ok' : '') + '">' + it.amt + '</span>' +
+          '<button class="btn btn-sm" data-go="' + it.go + '">去处理</button>' +
+        '</div>';
+      });
+    }
+    $('todayList').innerHTML = html;
+    $('exBannerHome').innerHTML = sampleBanner();
+
+    var mk = computeMonth();
+    var rate = computeRate();
+    $('hRate').textContent = Math.round(rate.hourly);
+    $('hRateSub').textContent = '月均到手 ' + money(rate.avgMonth) + ' · 在场 ' + Math.round(rate.monthHours) + ' 小时';
+    $('hBalance').textContent = money(mk.balance);
+    $('hBalanceSub').textContent = '收入 ' + money(mk.income) + ' − 固定 ' + money(mk.fixed) + ' − 弹性 ' + money(mk.flex);
+
+    var streak = computeStreak();
+    var flexToday = mk.avgPerDay;
+    $('hInsight').innerHTML = '记账 ' + state.records.length + ' 笔 · 连续 ' + streak + ' 天<br><span style="font-size:12.5px;color:var(--ink-2);font-weight:600">日均弹性 ' + money(flexToday) + ' ≈ ' + segHourText(flexToday / Math.max(rate.hourly, 0.01)) + '工作</span>';
+
+    var sorted = state.records.slice().sort(function (a, b) {
+      if (a.date === b.date) return b.ts - a.ts;
+      return a.date < b.date ? 1 : -1;
+    });
+    var top = sorted.slice(0, 4);
+    $('homeRecent').innerHTML = top.length ? top.map(function (r) { return recRow(r); }).join('') :
+      '<div class="empty">还没有记录，去记第一笔吧</div>';
+    $('homeRecentMore').innerHTML = '<button class="btn btn-sm btn-block" data-go="month">查看本月全部 ' + mk.recs.length + ' 笔' + icon('i-arrow') + '</button>';
+
+    // 存钱罐卡片
+    var goal = Math.max(1, state.savings.goal);
+    var p = state.savings.saved / goal;
+    $('homePigArt').innerHTML = pigSVG(Math.min(1, p), p >= 1 ? 'happy' : '');
+    $('pigHint').textContent = esc(state.savings.name || '自由基金');
+    $('homePigProgress').innerHTML =
+      '<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span style="color:var(--muted)">已存</span><span class="num" style="font-weight:800">' + money(state.savings.saved) + ' / ' + money(goal) + '</span></div>' +
+      '<div class="bar"><i style="width:' + Math.min(100, p * 100).toFixed(1) + '%"></i></div>' +
+      '<div class="help" style="margin-top:6px">' + (p >= 1 ? '达成啦！可以奖励自己一次真正的自由时间。' : '还差 ' + money(goal - state.savings.saved) + '，按每月 ' + money(state.savings.monthly) + ' 还需 ' + Math.max(1, Math.ceil((goal - state.savings.saved) / Math.max(1, state.savings.monthly))) + ' 个月') + '</div>';
+  }
+
+  /* ---------------- 记账 ---------------- */
+  function renderChips() {
+    $('catChips').innerHTML = CATS.map(function (c) {
+      return '<button class="chip" data-cat="' + c.id + '">' + icon(c.icon) + esc(c.name) + '</button>';
+    }).join('');
+    $('quickAmt').innerHTML = QUICK.map(function (v) { return '<button type="button" data-amt="' + v + '">¥' + v + '</button>'; }).join('');
+    setActiveCat(state.draftCat || 'food');
+  }
+
+  function setActiveCat(id) {
+    state.draftCat = id;
+    var nodes = $('catChips').querySelectorAll('.chip');
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].classList.toggle('on', nodes[i].getAttribute('data-cat') === id);
+    }
+  }
+
+  function renderWorkPreview() {
+    var v = parseFloat($('inAmt').value);
+    var rate = computeRate();
+    if (!isFinite(v) || v <= 0) {
+      $('wtBig').textContent = '—';
+      $('wtNote').textContent = '输入金额后实时换算（按真实时薪 ' + Math.round(rate.hourly) + ' 元/小时）';
+      return;
+    }
+    var h = rate.hourly > 0 ? v / rate.hourly : 0;
+    $('wtBig').textContent = segHourText(h);
+    var dailyH = rate.atWork + rate.dailyCommute + (rate.ot / rate.days);
+    var days = dailyH > 0 ? h / dailyH : 0;
+    var perDayMoney = rate.avgMonth / rate.days;
+    var ratio = perDayMoney > 0 ? v / perDayMoney * 100 : 0;
+    $('wtNote').innerHTML = '约等于 <b>' + (Math.round(days * 100) / 100) + ' 个工作日</b> 的在场时间，占一天到手工资的 ' + ratio.toFixed(1) + '%。';
+  }
+
+  function renderLedger() {
+    $('exBannerLedger').innerHTML = sampleBanner();
+    var t = todayStr();
+    var recs = state.records.filter(function (r) { return r.date === t; })
+      .sort(function (a, b) { return b.ts - a.ts; });
+    $('todayRecords').innerHTML = recs.length ? recs.map(function (r) { return recRow(r, { del: true }); }).join('') :
+      '<div class="empty">今天还是空的，第一笔是？</div>';
+    var tot = sumBy(recs, function () { return true; });
+    $('todayLedgerSum').textContent = recs.length ? '共 ' + recs.length + ' 笔 · ' + money(tot) : '';
+    renderWorkPreview();
+  }
+
+  /* ---------------- 本月账本 ---------------- */
+  function renderMonth() {
+    $('exBannerMonth').innerHTML = sampleBanner();
+    var m = computeMonth();
+    $('mMonthLabel').textContent = m.label;
+    $('mIncome').innerHTML = money(m.income) + '<small>元</small>';
+    $('mIncomeSub').textContent = money(Number(state.settings.salary) || 0) + ' × ' + state.settings.months + ' 个月 ÷ 12';
+    $('mFixed').innerHTML = money(m.fixed) + '<small>元</small>';
+    $('mFixedSub').textContent = m.fixed > 0 ? '含 ' + m.recs.filter(function (r) { return FIXED_CATS[r.cat]; }).length + ' 笔固定支出' : '本月还没记固定支出';
+    $('mFlex').innerHTML = money(m.flex) + '<small>元</small>';
+    $('mFlexSub').textContent = '本月已记 ' + m.recs.filter(function (r) { return !FIXED_CATS[r.cat]; }).length + ' 笔';
+
+    var saveRate = m.income > 0 ? m.balance / m.income : 0;
+    var hours = m.rate.hourly > 0 ? m.flex / m.rate.hourly : 0;
+    $('mSummary').innerHTML =
+      kv('到手收入', money(m.income), 'mint') +
+      kv('固定支出（房租·水电·订阅）', '− ' + money(m.fixed), 'red') +
+      kv('弹性支出（吃喝·购物·娱乐）', '− ' + money(m.flex), 'red') +
+      kv('可用结余', money(m.balance), m.balance >= 0 ? 'mint' : 'red') +
+      kv('储蓄率', (saveRate * 100).toFixed(1) + '%', saveRate >= 0.2 ? 'mint' : 'red') +
+      kv('弹性支出折合工作时间', segHourText(hours), '') +
+      kv('日均弹性支出', money(m.avgPerDay), '') +
+      kv('剩余天数', Math.max(0, m.dim - m.dayIdx) + ' 天', '');
+
+    var pct = m.budget > 0 ? m.flex / m.budget : 0;
+    $('mBudgetPct').textContent = m.budget > 0 ? (pct * 100).toFixed(0) + '%' : '未设置';
+    var bar = $('mBudgetBar');
+    bar.style.width = Math.min(100, pct * 100).toFixed(1) + '%';
+    bar.parentNode.className = 'bar' + (pct >= 1 ? ' hot' : (pct >= 0.8 ? ' warm' : ''));
+    $('mBudgetNote').textContent = m.budget > 0
+      ? (pct >= 1 ? '已超出 ' + money(m.flex - m.budget) + '，约 ' + segHourText((m.flex - m.budget) / Math.max(0.01, m.rate.hourly)) + ' 工作。'
+                  : '预算 ' + money(m.budget) + '，还剩 ' + money(m.budget - m.flex) + '（约 ' + segHourText((m.budget - m.flex) / Math.max(0.01, m.rate.hourly)) + ' 工作）。')
+      : '在「真实时薪」里设置每月弹性预算，就能看到使用进度。';
+
+    if (!m.cats.length) {
+      $('mCatBreak').innerHTML = '<div class="empty">本月还没有弹性支出记录</div>';
+    } else {
+      var total = m.cats.reduce(function (a, c) { return a + c.amt; }, 0);
+      $('mCatBreak').innerHTML = m.cats.map(function (c) {
+        var w = total > 0 ? c.amt / total * 100 : 0;
+        return '<div style="margin-bottom:11px">' +
+          '<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">' +
+            '<span style="display:flex;align-items:center;gap:6px;font-weight:600"><svg class="mcat-ic" style="color:' + c.color + '"><use href="#' + c.icon + '"/></svg>' + esc(c.name) +
+              '<span style="color:var(--muted);font-weight:500">' + w.toFixed(0) + '%</span></span>' +
+            '<span class="num" style="font-weight:700">' + money(c.amt) + '</span>' +
+          '</div>' +
+          '<div class="bar thin"><i style="width:' + w.toFixed(1) + '%;background:' + c.color + '"></i></div>' +
+        '</div>';
+      }).join('');
+      $('mCatCount').textContent = m.cats.length;
+    }
+
+    if (!m.recs.length) {
+      $('mAllRecords').innerHTML = '<div class="empty">本月还没有记录</div>';
+    } else {
+      var byDate = {};
+      m.recs.forEach(function (r) { (byDate[r.date] = byDate[r.date] || []).push(r); });
+      var keys = Object.keys(byDate).sort().reverse();
+      $('mAllRecords').innerHTML = keys.map(function (d) {
+        var daySum = sumBy(byDate[d], function () { return true; });
+        return '<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 2px;font-size:12px;color:var(--muted);font-weight:700">' +
+          '<span>' + d.slice(5, 7) + ' 月 ' + d.slice(8, 10) + ' 日 · ' + weekdayCN(new Date(d.replace(/-/g, '/'))) + '</span>' +
+          '<span class="num">' + money(daySum) + '</span></div>' +
+          byDate[d].map(function (r) { return recRow(r, { del: true }); }).join('');
+      }).join('');
+    }
+  }
+
+  function kv(k, v, cls) {
+    return '<div class="kv"><span class="k">' + esc(k) + '</span><span class="v ' + (cls || '') + '">' + v + '</span></div>';
+  }
+
+  /* ---------------- 真实时薪 ---------------- */
+  function fillRateInputs() {
+    var s = state.settings;
+    $('pSalary').value = s.salary;
+    $('pMonths').value = String(s.months);
+    $('pAtWork').value = s.atWork;
+    $('pOvertime').value = s.overtime;
+    $('pCommute').value = s.commute;
+    $('pWorkdays').value = s.workdays;
+    $('pFixedCost').value = s.fixedCost;
+    $('pFlex').value = s.flexBudget;
+  }
+
+  function renderRate() {
+    var r = computeRate();
+    $('rBig').textContent = r.hourly.toFixed(1);
+    var baseHourly = r.monthHours > 0 ? r.avgMonth / (8 * r.days) : 0;
+    $('rBigNote').innerHTML = '同样一份工作，如果只按「每天 8 小时」算，时薪看起来有 <b class="num">' + baseHourly.toFixed(1) + '</b> 元。' +
+      '<br>把通勤、午休和加班都算进去，你的时间其实每小时只值 <b class="num" style="color:var(--mint-deep)">' + r.hourly.toFixed(1) + '</b> 元。';
+    $('ratePig').innerHTML = pigSVG(Math.min(1, state.savings.saved / Math.max(1, state.savings.goal)));
+
+    var f = '' +
+      '<div class="f-ln"><span class="k">折算月均到手</span><span class="op">=</span>' + money(r.salary) + ' × ' + r.months + ' ÷ 12 <span class="op">=</span> <span class="v">' + money2(r.avgMonth) + '</span></div>' +
+      '<div class="f-ln"><span class="k">净到手</span><span class="op">=</span>折算月均到手 − 工作成本 <span class="op">=</span> ' + money2(r.avgMonth) + ' − ' + money2(r.cost) + ' <span class="op">=</span> <span class="v">' + money2(r.net) + '</span></div>' +
+      '<div class="f-ln"><span class="k">在场时长</span><span class="op">=</span>(' + r.atWork + 'h 在场 + ' + (Math.round(r.dailyCommute * 60)) + 'min 往返) × ' + r.days + ' 天 + ' + r.ot + 'h 加班 <span class="op">=</span> <span class="v">' + r.monthHours.toFixed(1) + ' 小时</span></div>' +
+      '<div class="f-ln"><span class="k">真实时薪</span><span class="op">=</span>' + money2(r.net) + ' ÷ ' + r.monthHours.toFixed(1) + 'h <span class="op">=</span> <span class="hl">' + r.hourly.toFixed(2) + ' 元/小时</span></div>';
+    $('rFormula').innerHTML = f;
+    $('rAvgMonth').textContent = money2(r.avgMonth);
+    $('rCost').textContent = '− ' + money2(r.cost);
+    $('rHours').textContent = r.monthHours.toFixed(1) + ' 小时/月';
+    $('rHourly').textContent = r.hourly.toFixed(2) + ' 元/小时';
+
+    var items = [
+      { n: '一杯奶茶 ¥25', v: r.hourly > 0 ? 25 / r.hourly : 0 },
+      { n: '一顿外卖 ¥35', v: r.hourly > 0 ? 35 / r.hourly : 0 },
+      { n: '一次打车 ¥60', v: r.hourly > 0 ? 60 / r.hourly : 0 },
+      { n: '一支口红 ¥199', v: r.hourly > 0 ? 199 / r.hourly : 0 },
+      { n: '一部新手机 ¥4999', v: r.hourly > 0 ? 4999 / r.hourly : 0 },
+      { n: '一趟短途旅行 ¥6000', v: r.hourly > 0 ? 6000 / r.hourly : 0 }
+    ];
+    $('rPriceCards').innerHTML = items.map(function (it) {
+      return '<div class="sim-cell"><div class="t">' + esc(it.n) + '</div><div class="n" style="color:var(--mint-deep);font-size:17px">' + hoursText(it.v) + '</div><div class="d">需要工作这么久</div></div>';
+    }).join('');
+    $('topRate').textContent = Math.round(r.hourly);
+  }
+
+  /* ---------------- 小猪存钱罐 ---------------- */
+  function renderPiggy() {
+    $('exBannerPig').innerHTML = sampleBanner();
+    var sv = state.savings;
+    var r = computeRate();
+    var goal = Math.max(1, sv.goal);
+    var p = sv.saved / goal;
+    $('bigPigArt').innerHTML = pigSVG(Math.min(1, p), p >= 1 ? 'happy' : '');
+    $('piggyRateHint').textContent = esc(sv.name || '自由基金');
+    $('piggyProgress').innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">' +
+        '<span class="num" style="font-size:26px;font-weight:800;color:var(--mint-deep)">' + money(sv.saved) + '</span>' +
+        '<span style="font-size:12.5px;color:var(--muted)">目标 ' + money(goal) + '</span>' +
+      '</div>' +
+      '<div class="bar"><i style="width:' + Math.min(100, p * 100).toFixed(1) + '%"></i></div>' +
+      '<div class="help" style="margin-top:8px">' + (p >= 1
+        ? '目标达成，小猪吃得饱饱的。'
+        : '完成 ' + (p * 100).toFixed(1) + '%，还差 ' + money(goal - sv.saved) + '（约 ' + segHourText((goal - sv.saved) / Math.max(0.01, r.hourly)) + ' 的工作时间）') + '</div>';
+
+    // 目标表单
+    $('fSaved').value = sv.saved;
+    $('fGoal').value = sv.goal;
+    $('fMonthly').value = sv.monthly;
+    $('fName').value = sv.name;
+
+    var left = Math.max(0, sv.goal - sv.saved);
+    var months = sv.monthly > 0 ? Math.ceil(left / sv.monthly) : Infinity;
+    $('fMonths').textContent = left <= 0 ? '已达成' : (isFinite(months) ? months + ' 个月' : '先设个每月存入');
+    $('fHours').textContent = segHourText(left / Math.max(0.01, r.hourly));
+    var perDaySave = 25; // 按一天省一杯 25 元的咖啡
+    $('fCoffee').textContent = left <= 0 ? '已达成' : Math.ceil(left / perDaySave) + ' 天';
+
+    // 安全垫
+    var m = computeMonth();
+    var monthlyFixed = m.fixed > 0 ? m.fixed : Math.max(0, Number(state.settings.fixedCost) || 0) + 2200;
+    var t3 = monthlyFixed * 3, t6 = monthlyFixed * 6;
+    $('sSaved').textContent = money(sv.safe);
+    $('sMonths').textContent = '可支撑 ' + (monthlyFixed > 0 ? (sv.safe / monthlyFixed).toFixed(1) : '0') + ' 个月固定开支';
+    $('sTarget3').textContent = money(t3);
+    $('sTarget6').textContent = money(t6);
+    $('sGap').textContent = sv.safe >= t6 ? '已超出，很稳' : '还差 ' + money(t6 - sv.safe);
+    var sp = t3 > 0 ? Math.min(1, sv.safe / t3) : 0;
+    $('sPct').textContent = Math.round(sp * 100) + '%';
+    $('sBar').style.width = (sp * 100).toFixed(1) + '%';
+    $('sSavedIn').value = sv.safe;
+
+    renderChart();
+  }
+
+  function renderChart() {
+    var goal = state.savings.goal || 1;
+    var data = computeSavingsSeries(goal);
+    var pts = data.pts;
+    var W = 720, H = 260, L = 46, R = 14, T = 16, B = 30;
+    var iw = W - L - R, ih = H - T - B;
+    var maxV = Math.max(data.max, 1);
+    function x(i) { return L + iw * (i / (pts.length - 1)); }
+    function y(v) { return T + ih * (1 - v / maxV); }
+
+    var grid = '', labels = '';
+    var step = 4;
+    for (var g = 0; g <= step; g++) {
+      var val = maxV * g / step;
+      var yy = y(val);
+      grid += '<line x1="' + L + '" y1="' + yy.toFixed(1) + '" x2="' + (W - R) + '" y2="' + yy.toFixed(1) + '" stroke="#EDE4D5" stroke-width="1" stroke-dasharray="' + (g === 0 ? '0' : '3 5') + '"/>';
+      labels += '<text x="' + (L - 8) + '" y="' + (yy + 4).toFixed(1) + '" text-anchor="end" font-size="10" fill="#A79E8C" font-family="monospace">' + (val >= 10000 ? (val / 10000).toFixed(1) + 'w' : Math.round(val / 1000 * 10) / 10 + 'k') + '</text>';
+    }
+
+    // 实际线（gap 处断开）
+    var actualPath = '', planPath = '', dots = '', xlabels = '';
+    pts.forEach(function (p, i) {
+      if (i % 1 === 0) {
+        xlabels += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="#A79E8C">' + p.label + '</text>';
+      }
+      if (p.value != null) {
+        dots += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p.value).toFixed(1) + '" r="' + (p.type === 'now' ? 5 : 3.4) + '" fill="#fff" stroke="' + (p.type === 'now' ? '#2B8471' : '#3AA98C') + '" stroke-width="2.2"/>';
+        if (p.type === 'now') {
+          dots += '<text x="' + x(i).toFixed(1) + '" y="' + (y(p.value) - 12).toFixed(1) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#2B8471" font-family="monospace">' + money(p.value) + '</text>';
+        }
+      }
+    });
+    var seg1 = pts.filter(function (p) { return p.type === 'actual' || p.type === 'now'; });
+    if (seg1.length > 1) {
+      actualPath = 'M' + seg1.map(function (p) { return x(p.idx).toFixed(1) + ' ' + y(p.value).toFixed(1); }).join(' L');
+    }
+    var seg2 = pts.filter(function (p) { return p.type === 'now' || p.type === 'plan'; });
+    planPath = 'M' + seg2.map(function (p) { return x(p.idx).toFixed(1) + ' ' + y(p.value).toFixed(1); }).join(' L');
+
+    var goalY = y(goal);
+    var goalLine = '<line x1="' + L + '" y1="' + goalY.toFixed(1) + '" x2="' + (W - R) + '" y2="' + goalY.toFixed(1) + '" stroke="#F6A9A0" stroke-width="1.8" stroke-dasharray="6 4"/>' +
+      '<text x="' + (W - R) + '" y="' + (goalY - 6).toFixed(1) + '" text-anchor="end" font-size="10.5" font-weight="700" fill="#D9786A">自由基金目标 ' + money(goal) + '</text>';
+    var nowX = x(6);
+    var nowLine = '<line x1="' + nowX + '" y1="' + T + '" x2="' + nowX + '" y2="' + (T + ih) + '" stroke="#CDE3D8" stroke-width="1" stroke-dasharray="2 4"/>';
+    var areaId = 'chartFill' + Date.now();
+    var areaPath = '';
+    if (seg2.length > 1) {
+      areaPath = planPath + ' L' + x(seg2[seg2.length - 1].idx).toFixed(1) + ' ' + (T + ih) + ' L' + x(seg2[0].idx).toFixed(1) + ' ' + (T + ih) + ' Z';
+    }
+
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="存款曲线图">' +
+      '<defs><linearGradient id="' + areaId + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#3AA98C" stop-opacity=".18"/><stop offset="100%" stop-color="#3AA98C" stop-opacity="0"/>' +
+      '</linearGradient></defs>' +
+      grid + labels +
+      (areaPath ? '<path d="' + areaPath + '" fill="url(#' + areaId + ')"/>' : '') +
+      goalLine + nowLine +
+      (actualPath ? '<path d="' + actualPath + '" fill="none" stroke="#3AA98C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' : '') +
+      (planPath ? '<path d="' + planPath + '" fill="none" stroke="#F2C27E" stroke-width="2.4" stroke-dasharray="7 5" stroke-linecap="round"/>' : '') +
+      dots + xlabels +
+      '<text x="' + nowX + '" y="' + (T + 12) + '" text-anchor="middle" font-size="10" font-weight="700" fill="#7FA697">本月</text>' +
+      '</svg>';
+    $('savingsChart').innerHTML = svg;
+
+    var left = Math.max(0, goal - state.savings.saved);
+    var mo = state.savings.monthly > 0 ? Math.ceil(left / state.savings.monthly) : Infinity;
+    $('chartNote').textContent = left <= 0
+      ? '已经超额完成目标，可以把目标调高一点，或者给自己留出更多自由时间。'
+      : '按每月存 ' + money(state.savings.monthly) + '，大约 ' + (isFinite(mo) ? mo + ' 个月' : '—') + ' 后能摸到目标线。历史存款可在「数据管理 → 导入」中补充。';
+  }
+
+  /* ---------------- 情景模拟 ---------------- */
+  var simKind = 'commute';
+
+  function simCore(kind, v) {
+    var s = JSON.parse(JSON.stringify(state.settings));
+    if (kind === 'commute') {
+      s.commute = v.commute;
+      s.fixedCost = v.fixedCost;
+    } else if (kind === 'overtime') {
+      s.overtime = v;
+    } else if (kind === 'raise') {
+      s.salary = Math.round(Number(state.settings.salary) * (1 + v / 100));
+    }
+    return computeRate(s);
+  }
+
+  function renderSim() {
+    var base = computeRate();
+    var html = '';
+    if (simKind === 'commute') {
+      var c = state.sim.commute;
+      var extraCost = Math.round((c - 45) * 1.1);
+      var fc = Math.max(0, Math.round(Number(state.settings.fixedCost) + extraCost));
+      html =
+        '<div class="field"><div class="field-label">单程通勤时长 <span class="tip" id="simCTip"></span></div>' +
+          '<div class="slider-row"><input type="range" id="simCommute" min="10" max="120" step="5" value="' + c + '"><b class="num" style="min-width:70px;text-align:right" id="simCV">' + c + ' 分</b></div></div>' +
+        '<div class="help" style="margin-top:4px">搬家后每月工作成本也随之变化（合租差价 / 地铁票价）：' +
+          '<b class="num">' + money(fc) + '</b>（原 ' + money(state.settings.fixedCost) + '）</div>' +
+        '<div class="seg" style="margin-top:12px" id="simPreset">' +
+          '<button data-preset="15">极近 · 15 分</button><button data-preset="30">适中 · 30 分</button>' +
+          '<button data-preset="45">常见 · 45 分</button><button data-preset="90">跨城 · 90 分</button>' +
+        '</div>';
+    } else if (simKind === 'overtime') {
+      var o = state.sim.overtime;
+      html =
+        '<div class="field"><div class="field-label">每月加班时长 <span class="tip" id="simOTip"></span></div>' +
+          '<div class="slider-row"><input type="range" id="simOT" min="0" max="100" step="2" value="' + o + '"><b class="num" style="min-width:70px;text-align:right" id="simOV">' + o + ' h</b></div></div>' +
+        '<div class="help" style="margin-top:4px">每天多留 ' + (o / Math.max(1, Number(state.settings.workdays) || 21)).toFixed(1) + ' 小时，一个月就是 ' + o + ' 小时。</div>';
+    } else {
+      var r = state.sim.raise;
+      html =
+        '<div class="field"><div class="field-label">月薪涨幅 <span class="tip" id="simRTip"></span></div>' +
+          '<div class="slider-row"><input type="range" id="simRaise" min="0" max="40" step="1" value="' + r + '"><b class="num" style="min-width:70px;text-align:right" id="simRV">+' + r + '%</b></div></div>' +
+        '<div class="help" style="margin-top:4px">涨薪后月均到手：<b class="num">' + money(base.avgMonth * (1 + r / 100)) + '</b>（原 ' + money(base.avgMonth) + '）</div>';
+    }
+    $('simControls').innerHTML = html;
+
+    var after;
+    var label;
+    if (simKind === 'commute') {
+      var cc = Number(state.sim.commute);
+      var ec = Math.round((cc - 45) * 1.1);
+      after = simCore('commute', { commute: cc, fixedCost: Math.max(0, Number(state.settings.fixedCost) + ec) });
+      label = '通勤 ' + cc + ' 分钟';
+    } else if (simKind === 'overtime') {
+      after = simCore('overtime', Number(state.sim.overtime));
+      label = '每月加班 ' + state.sim.overtime + ' 小时';
+    } else {
+      after = simCore('raise', Number(state.sim.raise));
+      label = '涨薪 ' + state.sim.raise + '%';
+    }
+
+    function delta(v, betterHigh) {
+      var d = v - 0;
+      return d;
+    }
+    var dHourly = after.hourly - base.hourly;
+    var dHours = after.monthHours - base.monthHours;
+    var dNet = after.net - base.net;
+    var dayHours = base.atWork + base.dailyCommute + base.ot / base.days;
+    var freeYear = dHours * 12;
+
+    $('simOut').innerHTML =
+      '<div class="sim-cell"><div class="t">情景</div><div class="n" style="font-size:15px">' + esc(label) + '</div><div class="d">对比：通勤 ' + base.commuteH * 60 + ' 分 / 加班 ' + base.ot + 'h / 月薪 ' + money(base.salary) + '</div></div>' +
+      '<div class="sim-cell"><div class="t">真实时薪</div><div class="n ' + (dHourly >= 0 ? 'up' : 'down') + '">' + after.hourly.toFixed(1) + '</div><div class="d">' + (dHourly >= 0 ? '+' : '') + dHourly.toFixed(1) + ' 元/小时</div></div>' +
+      '<div class="sim-cell"><div class="t">每月在场时长</div><div class="n" style="font-size:16px;color:' + (dHours > 0 ? '#C4614F' : '#2B8471') + '">' + after.monthHours.toFixed(0) + ' h</div><div class="d">' + (dHours >= 0 ? '+' : '') + dHours.toFixed(0) + ' 小时/月</div></div>' +
+      '<div class="sim-cell"><div class="t">每年多/少的时间</div><div class="n" style="font-size:16px;color:' + (freeYear > 0 ? '#C4614F' : '#2B8471') + '">' + (freeYear >= 0 ? '−' : '+') + Math.abs(freeYear / dayHours).toFixed(1) + ' 个工作日</div><div class="d">折合 ' + Math.abs(freeYear).toFixed(0) + ' 小时/年</div></div>';
+
+    var dailyAfter = after.atWork + after.dailyCommute + after.ot / after.days;
+    var fm = [];
+    fm.push('<div class="f-ln"><span class="k">净到手</span><span class="op">=</span>' + money2(after.net) + ' <span class="op">(' + (dNet >= 0 ? '+' : '') + money2(dNet) + ')</span></div>');
+    fm.push('<div class="f-ln"><span class="k">每月在场</span><span class="op">=</span>(' + after.atWork + 'h + ' + (Math.round(after.dailyCommute * 60)) + 'min ×2) × ' + after.days + ' + ' + after.ot + 'h <span class="op">=</span> <span class="v">' + after.monthHours.toFixed(1) + ' h</span></div>');
+    fm.push('<div class="f-ln"><span class="k">真实时薪</span><span class="op">=</span>' + money2(after.net) + ' ÷ ' + after.monthHours.toFixed(1) + ' <span class="op">=</span> <span class="hl">' + after.hourly.toFixed(2) + ' 元/小时</span></div>');
+    fm.push('<div class="f-ln"><span class="k">每天在公司</span><span class="op">≈</span>' + dailyAfter.toFixed(1) + ' 小时（原 ' + dayHours.toFixed(1) + ' 小时）</div>');
+    $('simFormula').innerHTML = fm.join('');
+
+    var tips = [];
+    if (simKind === 'commute') {
+      if (Number(state.sim.commute) < 45) tips.push('通勤每缩短 30 分钟，一年就多出约 ' + Math.round(30 * 2 * 21 * 12 / 60) + ' 小时自己的时间。');
+      else if (Number(state.sim.commute) > 45) tips.push('通勤拉长会同时吃掉时间和心情，先看看多出的房租是否能用时薪补回来。');
+    } else if (simKind === 'overtime') {
+      tips.push('加班大多没有加班费，时薪会被稀释——这也是很多人「涨薪后更累」的原因。');
+    } else {
+      tips.push('涨薪 20% 和通勤缩短 20 分钟，哪个更值？看上面的「真实时薪」变化就有答案。');
+    }
+    $('simNote').textContent = tips.join(' ');
+
+    // 预设高亮
+    var presets = $('simPreset');
+    if (presets) {
+      var btns = presets.querySelectorAll('button');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.toggle('on', Number(btns[i].getAttribute('data-preset')) === Number(state.sim.commute));
+      }
+    }
+    var ctip = $('simCTip');
+    if (ctip) ctip.textContent = '合计每天 ' + (Number(state.sim.commute) * 2) + ' 分钟在路上';
+
+    renderSimTable(base);
+  }
+
+  function renderSimTable(base) {
+    var rows = [];
+    var cA = computeRate(state.settings);
+    var cB = simCore('commute', { commute: Number(state.sim.commute), fixedCost: Math.max(0, Number(state.settings.fixedCost) + Math.round((Number(state.sim.commute) - 45) * 1.1)) });
+    var oB = simCore('overtime', Number(state.sim.overtime));
+    var rB = simCore('raise', Number(state.sim.raise));
+    rows.push({ n: '当前状态', r: cA });
+    rows.push({ n: '换租房 · 通勤 ' + state.sim.commute + ' 分', r: cB });
+    rows.push({ n: '加班 ' + state.sim.overtime + ' 小时/月', r: oB });
+    rows.push({ n: '涨薪 ' + state.sim.raise + '%', r: rB });
+    var h = '<table><thead><tr><th>情景</th><th>真实时薪</th><th>每月在场</th><th>每月净到手</th><th>时薪变化</th></tr></thead><tbody>';
+    rows.forEach(function (x, i) {
+      var d = x.r.hourly - cA.hourly;
+      h += '<tr' + (i === 0 ? ' class="total"' : '') + '><td>' + esc(x.n) + '</td>' +
+        '<td>' + x.r.hourly.toFixed(1) + '</td>' +
+        '<td>' + x.r.monthHours.toFixed(0) + ' h</td>' +
+        '<td>' + money(x.r.net) + '</td>' +
+        '<td style="color:' + (d >= 0 ? '#2B8471' : '#C4614F') + ';font-weight:700">' + (i === 0 ? '—' : (d >= 0 ? '+' : '') + d.toFixed(1) + ' 元/h') + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    $('simTable').innerHTML = h;
+  }
+
+  /* ---------------- 数据管理 ---------------- */
+  function renderData() {
+    var real = state.records.filter(function (r) { return !r.sample; }).length;
+    var samp = state.records.length - real;
+    $('dataCount').textContent = '共 ' + state.records.length + ' 条记录';
+    $('dataSampleStat').innerHTML = '当前共 <b>' + state.records.length + '</b> 条记录：其中示例 <b>' + samp + '</b> 条，你自己记的 <b>' + real + '</b> 条；存款历史 ' + state.history.length + ' 个月。' +
+      (real >= 30 ? '<br><span style="color:#B8722E">记录已积累 ' + real + ' 条，建议现在导出备份。</span>' : '');
+  }
+
+  /* ---------------- 统一刷新入口（唯一调度点） ---------------- */
+  function refreshAll() {
+    renderHome();
+    renderLedger();
+    renderMonth();
+    renderRate();
+    renderPiggy();
+    renderSim();
+    renderData();
+  }
+
+  function renderViewScoped(view) {
+    // 数据变化后，只保证当前视图与首页同步；全部刷新代价也很小，直接走 refreshAll
+    refreshAll();
+    void view;
+  }
+
+  /* ---------------- 交互 ---------------- */
+  var currentView = 'home';
+
+  function go(view) {
+    if (!VIEWS[view]) view = 'home';
+    currentView = view;
+    var vs = document.querySelectorAll('.view');
+    for (var i = 0; i < vs.length; i++) vs[i].classList.toggle('active', vs[i].id === 'view-' + view);
+    var navs = document.querySelectorAll('.nav-item');
+    for (var j = 0; j < navs.length; j++) navs[j].classList.toggle('active', navs[j].getAttribute('data-view') === view);
+    var tabs = document.querySelectorAll('.tab-item');
+    for (var k = 0; k < tabs.length; k++) tabs[k].classList.toggle('active', tabs[k].getAttribute('data-view') === view);
+    $('pageTitle').textContent = VIEWS[view].title;
+    $('pageSub').textContent = VIEWS[view].sub;
+    if (view === 'home' || view === 'month') renderHome(), renderMonth();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toast(msg, ic) {
+    var w = $('toastWrap');
+    var el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = icon(ic || 'i-check') + '<span>' + esc(msg) + '</span>';
+    w.appendChild(el);
+    setTimeout(function () {
+      el.style.transition = 'opacity .3s, transform .3s';
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-6px)';
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 320);
+    }, 2100);
+  }
+
+  var dlgCb = null;
+  function confirmDialog(title, text, okText, danger, cb) {
+    $('dlgTitle').textContent = title;
+    $('dlgText').textContent = text;
+    $('dlgOk').textContent = okText || '确定';
+    $('dlgOk').className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+    dlgCb = cb;
+    $('mask').classList.add('open');
+  }
+  function closeDialog() {
+    $('mask').classList.remove('open');
+    dlgCb = null;
+  }
+
+  function saveRecord() {
+    var amt = parseFloat($('inAmt').value);
+    if (!isFinite(amt) || amt <= 0) {
+      toast('先填一个大于 0 的金额', 'i-info');
+      $('inAmt').focus();
+      return;
+    }
+    if (amt > 10000000) { toast('金额太大了，检查一下？', 'i-info'); return; }
+    var note = $('inNote').value.trim();
+    state.records.push({
+      id: uid(), date: todayStr(), amt: Math.round(amt * 100) / 100,
+      cat: state.draftCat || 'food', note: note, sample: false, ts: Date.now()
+    });
+    save();
+    var rate = computeRate();
+    var h = segHourText(amt / Math.max(0.01, rate.hourly));
+    $('inAmt').value = '';
+    $('inNote').value = '';
+    renderWorkPreview();
+    refreshAll();
+    toast('记好啦：' + money2(amt) + ' ≈ ' + h + ' 工作', 'i-pig');
+  }
+
+  function deleteRecord(id) {
+    var r = state.records.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    confirmDialog('删除这条记录？', (r.note ? r.note + ' · ' : '') + money2(r.amt) + '（' + r.date + '）删除后无法恢复。', '删除', true, function () {
+      state.records = state.records.filter(function (x) { return x.id !== id; });
+      save();
+      refreshAll();
+      toast('已删除', 'i-trash');
+    });
+  }
+
+  function readSettingsInputs() {
+    var s = state.settings;
+    var pairs = [
+      ['pSalary', 'salary', 0], ['pAtWork', 'atWork', 0.5], ['pOvertime', 'overtime', 0],
+      ['pCommute', 'commute', 0], ['pWorkdays', 'workdays', 1], ['pFixedCost', 'fixedCost', 0], ['pFlex', 'flexBudget', 0]
+    ];
+    pairs.forEach(function (p) {
+      var el = $(p[0]);
+      var v = parseFloat(el.value);
+      if (isFinite(v) && v >= 0) s[p[1]] = v;
+    });
+    var mo = parseInt($('pMonths').value, 10);
+    if (isFinite(mo) && mo >= 1) s.months = mo;
+    if (s.workdays < 1) s.workdays = 1;
+    if (s.workdays > 31) s.workdays = 31;
+    if (s.atWork > 24) s.atWork = 24;
+    if (s.months > 24) s.months = 24;
+    s.salary = Math.round(s.salary * 100) / 100;
+  }
+
+  function downloadFile(name, content, mime) {
+    // Android 壳内（无 INTERNET、无彩蛋浏览器下载目录）优先交给原生桥保存到「下载」
+    try {
+      if (window.AndroidBridge && typeof window.AndroidBridge.saveBlob === 'function') {
+        var bytes = new TextEncoder().encode(content);
+        var bin = '';
+        for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        window.AndroidBridge.saveBlob(name, btoa(bin), mime || 'application/json');
+        return true;
+      }
+    } catch (e) { /* 原生桥失败则走浏览器下载 */ }
+    try {
+      var blob = new Blob([content], { type: mime || 'application/json;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      return true;
+    } catch (e) {
+      // 部分内嵌环境不支持 blob 下载，退回 data URI
+      try {
+        var a2 = document.createElement('a');
+        a2.href = 'data:' + (mime || 'application/json') + ';charset=utf-8,' + encodeURIComponent(content);
+        a2.download = name;
+        document.body.appendChild(a2);
+        a2.click();
+        document.body.removeChild(a2);
+        return true;
+      } catch (e2) { return false; }
+    }
+  }
+
+  function exportJSON() {
+    var payload = JSON.parse(JSON.stringify(state));
+    payload.app = APP;
+    payload.exportedAt = new Date().toISOString();
+    var d = new Date();
+    var name = '小账本备份_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json';
+    if (downloadFile(name, JSON.stringify(payload, null, 2))) toast('备份已导出，记得存到云盘', 'i-download');
+    else toast('导出失败，请换浏览器试一次', 'i-info');
+  }
+
+  function exportCSV() {
+    var rows = [['日期', '分类', '金额', '备注', '标记']];
+    state.records.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).forEach(function (r) {
+      rows.push([r.date, catOf(r.cat).name, String(r.amt), (r.note || '').replace(/"/g, '""'), r.sample ? '示例' : '']);
+    });
+    var csv = '\ufeff' + rows.map(function (r) {
+      return r.map(function (c) { return '"' + String(c) + '"'; }).join(',');
+    }).join('\r\n');
+    var d = new Date();
+    if (downloadFile('记账明细_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.csv', csv, 'text/csv;charset=utf-8')) {
+      toast('CSV 已导出，可用 Excel 打开', 'i-download');
+    } else toast('导出失败', 'i-info');
+  }
+
+  function importJSON(file) {
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { toast('文件太大（超过 8MB）', 'i-info'); return; }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var data;
+      try { data = JSON.parse(String(reader.result)); }
+      catch (e) { toast('不是有效的 JSON 文件', 'i-info'); return; }
+      if (!data || typeof data !== 'object' || (!data.records && !data.settings)) {
+        toast('文件里没有可识别的账本数据', 'i-info'); return;
+      }
+      var snap = JSON.stringify(state);
+      var next = sanitize(data);
+      confirmDialog('确认导入？',
+        '将导入 ' + next.records.length + ' 条记录（其中示例 ' + next.records.filter(function (r) { return r.sample; }).length + ' 条）。当前数据会被替换，旧数据自动备份到浏览器本地快照（可用「撤销导入」找回）。',
+        '导入并替换', false, function () {
+          try { localStorage.setItem(KEY + '_snapshot', snap); } catch (e) {}
+          state = next;
+          save();
+          fillRateInputs();
+          refreshAll();
+          toast('导入完成：' + next.records.length + ' 条记录', 'i-upload');
+        });
+    };
+    reader.onerror = function () { toast('读取文件失败', 'i-info'); };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  function undoImport() {
+    var snap = localStorage.getItem(KEY + '_snapshot');
+    if (!snap) { toast('没有可用的导入前快照', 'i-info'); return; }
+    confirmDialog('撤销上次导入？', '将恢复到上一次导入前的数据状态。', '恢复', false, function () {
+      try {
+        state = sanitize(JSON.parse(snap));
+        save();
+        fillRateInputs();
+        refreshAll();
+        toast('已恢复到导入前', 'i-check');
+      } catch (e) { toast('快照损坏，恢复失败', 'i-info'); }
+    });
+  }
+
+  function clearSample() {
+    var n = state.records.filter(function (r) { return r.sample; }).length;
+    if (n === 0) { toast('没有示例记录了', 'i-check'); return; }
+    confirmDialog('删除全部示例数据？', '将移除 ' + n + ' 条示例记录、示例存款历史。你之后自己记的账不受影响。', '删除示例', true, function () {
+      state.records = state.records.filter(function (r) { return !r.sample; });
+      state.history = state.history.filter(function (h) { return !h.sample; });
+      save();
+      refreshAll();
+      toast('示例数据已清理，可以开始正式记账了', 'i-check');
+    });
+  }
+
+  function clearAll() {
+    confirmDialog('清空全部数据？', '所有记账、时薪参数、存钱罐目标都会被清空，并恢复为初始演示状态。此操作不可撤销，建议先导出备份。', '确认清空', true, function () {
+      // 二次确认：要求输入关键词，防误触
+      var word = '清空';
+      var t = window.prompt('请输入「' + word + '」两个字以最终确认：', '');
+      if (t !== word) { toast('已取消', 'i-info'); return; }
+      try { localStorage.setItem(KEY + '_snapshot', JSON.stringify(state)); } catch (e) {}
+      state = defaultState();
+      save();
+      fillRateInputs();
+      $('inAmt').value = '';
+      $('inNote').value = '';
+      refreshAll();
+      toast('已清空并重置为演示数据', 'i-trash');
+    });
+  }
+
+  /* ---------------- 事件绑定 ---------------- */
+  function bindNav() {
+    document.addEventListener('click', function (e) {
+      var t = e.target.closest ? e.target.closest('[data-view],[data-go]') : null;
+      if (!t) return;
+      if (t.hasAttribute('data-view')) { go(t.getAttribute('data-view')); return; }
+      if (t.hasAttribute('data-go')) {
+        var v = t.getAttribute('data-go');
+        go(v);
+        if (v === 'ledger') setTimeout(function () { try { $('inAmt').focus(); } catch (er) {} }, 260);
+      }
+    });
+  }
+
+  function bindLedger() {
+    $('catChips').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-cat]') : null;
+      if (!b) return;
+      setActiveCat(b.getAttribute('data-cat'));
+    });
+    $('quickAmt').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-amt]') : null;
+      if (!b) return;
+      var cur = parseFloat($('inAmt').value) || 0;
+      var val = parseFloat(b.getAttribute('data-amt'));
+      $('inAmt').value = (cur > 0 ? Math.round((cur + val) * 100) / 100 : val);
+      renderWorkPreview();
+    });
+    $('inAmt').addEventListener('input', renderWorkPreview);
+    $('inAmt').addEventListener('keydown', function (e) { if (e.key === 'Enter') saveRecord(); });
+    $('inNote').addEventListener('keydown', function (e) { if (e.key === 'Enter') saveRecord(); });
+    $('btnSave').addEventListener('click', saveRecord);
+    $('btnReset').addEventListener('click', function () {
+      $('inAmt').value = '';
+      $('inNote').value = '';
+      renderWorkPreview();
+    });
+  }
+
+  function bindDelegatedDelete() {
+    // 删除按钮存在于多个列表，统一事件委托
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-del]') : null;
+      if (!b) return;
+      deleteRecord(b.getAttribute('data-del'));
+    });
+  }
+
+  function bindRate() {
+    var ids = ['pSalary', 'pMonths', 'pAtWork', 'pOvertime', 'pCommute', 'pWorkdays', 'pFixedCost', 'pFlex'];
+    ids.forEach(function (id) {
+      var el = $(id);
+      el.addEventListener('change', function () {
+        readSettingsInputs();
+        save();
+        refreshAll();
+      });
+      el.addEventListener('input', function () {
+        // 输入过程中就即时反馈时薪，但不写盘（change 时写盘）
+        readSettingsInputs();
+        renderRate();
+      });
+    });
+  }
+
+  function bindPiggy() {
+    $('btnSaveGoal').addEventListener('click', function () {
+      var g = parseFloat($('fGoal').value);
+      var s = parseFloat($('fSaved').value);
+      var m = parseFloat($('fMonthly').value);
+      if (!isFinite(g) || g <= 0) { toast('目标金额要大于 0', 'i-info'); return; }
+      state.savings.goal = Math.round(g);
+      state.savings.saved = isFinite(s) && s >= 0 ? Math.round(s * 100) / 100 : 0;
+      state.savings.monthly = isFinite(m) && m >= 0 ? Math.round(m) : 0;
+      state.savings.name = ($('fName').value || '自由基金').slice(0, 20);
+      save();
+      refreshAll();
+      toast('目标已更新', 'i-target');
+    });
+    $('btnSaveSafe').addEventListener('click', function () {
+      var v = parseFloat($('sSavedIn').value);
+      if (!isFinite(v) || v < 0) { toast('请输入有效金额', 'i-info'); return; }
+      state.savings.safe = Math.round(v * 100) / 100;
+      save();
+      refreshAll();
+      toast('安全垫已更新', 'i-leaf');
+    });
+  }
+
+  function bindSim() {
+    $('simSeg').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-sim]') : null;
+      if (!b) return;
+      simKind = b.getAttribute('data-sim');
+      var btns = $('simSeg').querySelectorAll('button');
+      for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i] === b);
+      renderSim();
+    });
+    $('simControls').addEventListener('input', function (e) {
+      var t = e.target;
+      if (t.id === 'simCommute') { state.sim.commute = Number(t.value); }
+      else if (t.id === 'simOT') { state.sim.overtime = Number(t.value); }
+      else if (t.id === 'simRaise') { state.sim.raise = Number(t.value); }
+      else return;
+      save();
+      renderSim();
+    });
+    $('simControls').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-preset]') : null;
+      if (!b) return;
+      state.sim.commute = Number(b.getAttribute('data-preset'));
+      save();
+      renderSim();
+    });
+  }
+
+  function bindData() {
+    $('btnExport').addEventListener('click', exportJSON);
+    $('btnExportCsv').addEventListener('click', exportCSV);
+    $('fileImport').addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0];
+      importJSON(f);
+      e.target.value = '';
+    });
+    $('btnClearSample').addEventListener('click', clearSample);
+    $('btnClearAll').addEventListener('click', clearAll);
+    var undo = $('btnUndoImport');
+    if (undo) undo.addEventListener('click', undoImport);
+  }
+
+  function bindDialog() {
+    $('dlgCancel').addEventListener('click', closeDialog);
+    $('mask').addEventListener('click', function (e) { if (e.target === $('mask')) closeDialog(); });
+    $('dlgOk').addEventListener('click', function () {
+      var cb = dlgCb;
+      closeDialog();
+      if (cb) setTimeout(cb, 30);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && $('mask').classList.contains('open')) closeDialog();
+    });
+  }
+
+  function bindKeyboard() {
+    // 桌面快捷键：1~6 切换视图
+    document.addEventListener('keydown', function (e) {
+      if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      var map = { '1': 'home', '2': 'ledger', '3': 'month', '4': 'rate', '5': 'piggy', '6': 'sim' };
+      if (map[e.key]) go(map[e.key]);
+    });
+  }
+
+  /* ---------------- 初始化 ---------------- */
+  function init() {
+    load();
+    state.draftCat = 'food';
+    renderChips();
+    fillRateInputs();
+    bindNav();
+    bindLedger();
+    bindDelegatedDelete();
+    bindRate();
+    bindPiggy();
+    bindSim();
+    bindData();
+    bindDialog();
+    bindKeyboard();
+    refreshAll();
+    go('home');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+
+
+
+
+
+
+</body>
+</html>
