@@ -1,44 +1,64 @@
 #!/usr/bin/env bash
 # ============================================================
-#  把工程推送到 GitHub（首次使用：先在网页上新建一个空仓库）
+#  把工程推送到 GitHub
 #  用法：
-#     bash push-to-github.sh git@github.com:你的用户名/workpig-ledger.git
-#     或
-#     bash push-to-github.sh https://github.com/你的用户名/workpig-ledger.git
+#     bash push-to-github.sh                          # 推到已配置的 origin
+#     bash push-to-github.sh <仓库地址>                # 指定/更换仓库
 # ============================================================
 set -euo pipefail
 cd "$(dirname "$0")"
 
 REMOTE="${1:-}"
-if [ -z "$REMOTE" ]; then
-  echo "用法：bash push-to-github.sh <仓库地址>"
-  echo "示例：bash push-to-github.sh git@github.com:yourname/workpig-ledger.git"
-  exit 1
-fi
-
-# 防护：确认没有任何签名材料会被推上去
-for f in workpig-release.jks keystore.properties local.properties; do
-  if [ -f "$f" ] && ! grep -q "^$f$" .gitignore 2>/dev/null; then
-    echo "⚠ 检测到 $f 且未被 .gitignore 排除，已中止。"
-    exit 1
+if [ -n "$REMOTE" ]; then
+  if git remote get-url origin >/dev/null 2>&1; then
+    git remote set-url origin "$REMOTE"
+  else
+    git remote add origin "$REMOTE"
   fi
-done
-if git ls-files | grep -qE "\.jks$|^keystore\.properties$"; then
-  echo "⚠ 暂存区里出现了密钥文件，已中止。请先 git rm --cached 移除。"
+fi
+
+if ! git remote get-url origin >/dev/null 2>&1; then
+  echo "用法：bash push-to-github.sh <仓库地址>"
+  echo "示例：bash push-to-github.sh https://github.com/yourname/workpig-ledger.git"
   exit 1
 fi
 
-if git remote get-url origin >/dev/null 2>&1; then
-  git remote set-url origin "$REMOTE"
-else
-  git remote add origin "$REMOTE"
-fi
+echo "▶ 仓库：$(git remote get-url origin)"
+echo ""
 
-echo "▶ 推送到 $REMOTE"
+# 防护 1：密钥文件不能进暂存区
+if git ls-files | grep -qE '\.jks$|\.keystore$|^keystore\.properties$|^secrets\.txt$|^local\.properties$'; then
+  echo "❌ 暂存区里出现了密钥/本地配置，已中止："
+  git ls-files | grep -E '\.jks$|\.keystore$|^keystore\.properties$|^secrets\.txt$|^local\.properties$'
+  echo "   处理：git rm --cached <文件>，并确认 .gitignore 已包含"
+  exit 1
+fi
+echo "✓ 暂存区无密钥文件"
+
+# 防护 2：工作区不能有未提交改动
+if [ -n "$(git status --porcelain)" ]; then
+  echo "⚠ 有未提交的改动，请先 commit 再推送"
+  git status --short
+  exit 1
+fi
+echo "✓ 工作区干净"
+
+# 防护 3：提交里不能含明显密钥内容（简易扫描）
+if git log -p --all 2>/dev/null | grep -qiE 'BEGIN (RSA |)PRIVATE KEY|RELEASE_STORE_PASSWORD=.{6,}'; then
+  echo "❌ 提交历史里疑似含私钥或签名密码，已中止"
+  exit 1
+fi
+echo "✓ 提交历史无密钥痕迹"
+echo ""
+
+echo "▶ 开始推送..."
 git push -u origin main
 
 echo ""
-echo "✅ 推送完成。接下来："
-echo "   1. 打开仓库 Settings → Secrets and variables → Actions"
-echo "   2. 按 README 第九节配置 4 个 Secrets"
-echo "   3. 打开 Actions → Build Release APK → Run workflow"
+echo "✅ 推送成功"
+echo ""
+echo "下一步："
+echo "  1) 生成签名密钥（如还没有）：bash init-key.sh"
+echo "  2) 生成 Secrets：            bash make-secrets.sh"
+echo "  3) 到 GitHub → Settings → Secrets and variables → Actions 添加 4 条"
+echo "  4) 到 Actions → Build Release APK → Run workflow"
