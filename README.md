@@ -118,6 +118,9 @@ workpig-android/
 ├── gradlew / gradlew.bat / gradle/wrapper/
 ├── init-key.sh          # 一次性生成签名密钥
 ├── sign.sh              # 编译 + 签名 + 校验 + 输出 dist/
+├── make-secrets.sh      # 生成 GitHub Secrets 所需的 base64 与密码
+├── push-to-github.sh    # 带密钥泄漏防护的推送脚本
+├── .github/workflows/build-release.yml  # 云端出包
 └── app/
     ├── build.gradle     # 签名配置、minSdk 24、ABI 无关
     └── src/main/
@@ -184,36 +187,56 @@ A：这个工作台是纯前端 + localStorage，套壳零收益差异；真要�
 
 ---
 
-## 九、用 GitHub Actions 云端自动出包（可选）
+## 九、用 GitHub Actions 云端自动出包
 
-工程内已带 `.github/workflows/build-release.yml`，不需要本机装任何环境：
+工程内已带 `.github/workflows/build-release.yml`，不需要本机装任何环境。
+仓库已初始化好（`main` 分支、2 次提交、密钥与本地配置均已排除）。
 
-**第一步：把密钥转成 base64**
+### 第 1 步：在 GitHub 上新建空仓库
+
+打开 <https://github.com/new>，填仓库名（如 `workpig-ledger`），
+**不要**勾选 README / .gitignore / License（本地已有，勾了会冲突）。
+
+### 第 2 步：推送
 
 ```bash
-# macOS / Linux
-base64 -i workpig-release.jks | tr -d '\n'
-# Windows PowerShell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("workpig-release.jks"))
+cd workpig-android
+bash push-to-github.sh git@github.com:你的用户名/workpig-ledger.git
 ```
 
-**第二步：在仓库里配置 4 个 Secrets**
-`Settings → Secrets and variables → Actions → New repository secret`
+脚本会先检查暂存区里有没有 `.jks` / `keystore.properties`，发现就中止。
+如果本机还没配 SSH key，把地址换成 HTTPS 版本即可（会提示输入 token）。
+
+### 第 3 步：生成 Secrets
+
+```bash
+bash make-secrets.sh
+# 输入密钥库密码 → 自动校验密码和别名 → 生成 secrets.txt（权限 600）
+```
+
+打开 `secrets.txt`，到 `Settings → Secrets and variables → Actions → New repository secret`
+逐条添加：
 
 | Secret 名 | 内容 |
 |---|---|
-| `KEYSTORE_BASE64` | 上一步输出的 base64 字符串 |
+| `KEYSTORE_BASE64` | 文件里那一长串 base64 |
 | `KEYSTORE_PASSWORD` | 密钥库密码 |
 | `KEY_ALIAS` | 别名（默认 `workpig`） |
 | `KEY_PASSWORD` | 密钥密码 |
 
-**第三步：触发构建**
+配置完立刻删掉：`rm -f secrets.txt`。
 
-- 网页方式：`Actions → Build Release APK → Run workflow`，产物在页面底部的 Artifacts 里下载（保留 30 天）
-- 打 tag 方式：`git tag v1.0.1 && git push origin v1.0.1`，会自动创建 Release 并把 APK 挂上去
+### 第 4 步：触发构建
 
-流程末尾会强制删除签名密钥与 `keystore.properties`，日志里不会残留任何密码。
+- 网页方式：`Actions → Build Release APK → Run workflow`
+  产物在运行页底部的 **Artifacts** 里，文件名 `打工人-apk.zip`，解压得到 `打工人.apk`
+- 打 tag 方式：`git tag v1.0.1 && git push origin v1.0.1`
+  会自动创建 Release，APK 与 `.sha256` 直接挂在 Release 页面
 
-> 注意：Action 里用的是官方 Gradle 分发源，CI 机器在境外，一般不会超时；如果自建 runner 在国内，同样把
-> `distributionUrl` 换成镜像即可。
+每次构建都会跑 `apksigner verify --print-certs`，签名不通过则整个任务失败，不会产出半成品。
+流程末尾（`if: always()`）强制删除 `keystore.properties` 和临时 jks，日志不会残留密码。
+
+> CI 机器在境外，走官方 Gradle 源一般不会超时；若用国内自建 runner，把
+> `gradle-wrapper.properties` 里的 `distributionUrl` 换成腾讯云镜像。
+
 
