@@ -374,6 +374,32 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
   .nav-item{font-size:13.5px}
 }
 
+/* ============ v1.1 · 额外收入 / 本地备份 ============ */
+.rec-amt.in{color:var(--mint-deep)}
+.rec-work.in{color:var(--mint-deep);background:#DDF2E8}
+.inc-hero{background:linear-gradient(120deg,#EAF7F1,#FDFBF4 65%,#FCF0DB);border:1px solid #CFE9DE;border-radius:18px;padding:16px}
+.mig-box{display:flex;flex-direction:column;gap:8px}
+.mig-box textarea{min-height:88px;font-size:12px;font-family:var(--num);line-height:1.45}
+.mig-step{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);margin-top:9px;line-height:1.6}
+.mig-step b{display:grid;place-items:center;width:20px;height:20px;flex:0 0 20px;border-radius:50%;background:var(--mint-soft);color:var(--mint-deep);font-size:11px}
+.bk-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.bk-item:last-child{border-bottom:0}
+.bk-ic{width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:var(--mint-soft);display:grid;place-items:center;color:var(--mint-deep)}
+.bk-ic svg{width:18px;height:18px}
+.bk-main{flex:1;min-width:0}
+.bk-t{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.bk-acts{display:flex;gap:6px;flex:0 0 auto}
+.bk-acts .btn{min-height:34px;padding:0 10px;font-size:12px;border-radius:10px}
+.bk-acts .btn svg{width:14px;height:14px}
+.bk-tag{font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;background:#FBE9C8;color:#9A6E22;margin-left:5px}
+.bk-tag.auto{background:var(--mint-soft);color:var(--mint-deep)}
+@media (max-width:820px){
+  .tabbar{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabbar::-webkit-scrollbar{display:none}
+  .tab-item{flex:1 0 58px;min-width:58px}
+}
+
 /* print-free misc */
 .empty{padding:20px;text-align:center;color:var(--muted);font-size:13px}
 .ex-banner{
@@ -444,14 +470,15 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     </div>
     <button class="nav-item active" data-view="home"><svg><use href="#i-home"/></svg>今日首页</button>
     <button class="nav-item" data-view="ledger"><svg><use href="#i-pen"/></svg>10 秒记账</button>
+    <button class="nav-item" data-view="income"><svg><use href="#i-coins"/></svg>额外收入</button>
     <button class="nav-item" data-view="month"><svg><use href="#i-wallet"/></svg>本月账本</button>
+    <button class="nav-item" data-view="data"><svg><use href="#i-sync"/></svg>备份与迁移</button>
     <button class="nav-item" data-view="rate"><svg><use href="#i-calc"/></svg>真实时薪</button>
     <button class="nav-item" data-view="piggy"><svg><use href="#i-pig"/></svg>小猪存钱罐</button>
     <button class="nav-item" data-view="sim"><svg><use href="#i-sliders"/></svg>情景模拟</button>
-    <button class="nav-item" data-view="data"><svg><use href="#i-sync"/></svg>数据管理</button>
     <div class="sidebar-foot">
-      <div><b>离线运行</b> · 数据只存在本机浏览器</div>
-      <div>建议每周导出一次 JSON 备份</div>
+      <div><b>离线运行</b> · 每天自动本机备份</div>
+      <div>换手机用「备份与迁移」</div>
     </div>
   </aside>
 
@@ -497,6 +524,15 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
         </div>
       </div>
 
+      <div class="card" style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px">
+          <div style="font-size:12px;color:var(--muted);font-weight:700">本月额外收入</div>
+          <div class="num" style="font-size:24px;font-weight:800;color:var(--mint-deep)" id="homeInc">--</div>
+          <div class="help" id="homeIncSub">工资之外的钱，已并入本月收入</div>
+        </div>
+        <button class="btn btn-soft" data-go="income"><svg><use href="#i-coins"/></svg>记一笔收入<svg><use href="#i-arrow"/></svg></button>
+      </div>
+
       <div class="grid g2" style="margin-top:14px;align-items:start">
         <div class="card">
           <div class="card-head">
@@ -523,7 +559,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       <div class="card">
         <div class="card-head">
           <div class="card-title"><svg><use href="#i-pen"/></svg>10 秒记一笔</div>
-          <span class="card-hint">金额 → 分类 → 保存</span>
+          <button class="btn btn-sm" data-go="income">记收入<svg><use href="#i-arrow"/></svg></button>
         </div>
 
         <div class="field">
@@ -615,6 +651,87 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
           <span class="card-hint">按天倒序</span>
         </div>
         <div id="mAllRecords"></div>
+      </div>
+    </section>
+
+    <!-- ---------- INCOME (v1.1) ---------- -->
+    <section class="view" id="view-income">
+      <div class="inc-hero" style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--ink-2)"><svg style="width:16px;height:16px;color:var(--mint-deep)"><use href="#i-coins"/></svg>本月我的全部收入</div>
+        <div class="num" style="font-size:34px;font-weight:800;color:var(--mint-deep);line-height:1.2;margin-top:4px" id="incTotalBig">--</div>
+        <div class="help" id="incTotalSub" style="margin-top:2px">工资收入 + 额外收入，已自动计入本月结余</div>
+        <div class="bar" style="margin-top:12px"><i id="incBar" style="width:0%"></i></div>
+        <div class="help" id="incBarNote" style="margin-top:6px"></div>
+      </div>
+
+      <div class="grid g3">
+        <div class="stat accent">
+          <div class="lbl"><svg><use href="#i-coins"/></svg>本月额外收入</div>
+          <div class="big" id="incMonth">--</div>
+          <div class="sub" id="incMonthSub">--</div>
+        </div>
+        <div class="stat warm">
+          <div class="lbl"><svg><use href="#i-chart"/></svg>今年累计额外</div>
+          <div class="big" id="incYear">--</div>
+          <div class="sub" id="incYearSub">--</div>
+        </div>
+        <div class="stat">
+          <div class="lbl"><svg><use href="#i-clock"/></svg>折合少上班</div>
+          <div class="big" id="incHours">--</div>
+          <div class="sub">按真实时薪换算的自由时间</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-coins"/></svg>记一笔额外收入</div>
+          <span class="card-hint">工资之外的钱，都记这里</span>
+        </div>
+        <div class="field">
+          <div class="field-label">金额（元）</div>
+          <input type="number" id="inIncAmt" inputmode="decimal" step="0.01" min="0" placeholder="0.00" autocomplete="off">
+          <div class="quick-amt" id="incQuickAmt"></div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <div class="field-label">来源 <span class="tip">点一下就好</span></div>
+          <div class="chips" id="incCatChips"></div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <div class="field">
+            <label>日期</label>
+            <input type="date" id="inIncDate">
+          </div>
+          <div class="field">
+            <label>备注 <span class="tip">可不填</span></label>
+            <input type="text" id="inIncNote" maxlength="30" placeholder="例如：监控安装尾款">
+          </div>
+        </div>
+        <div class="worktime" id="incPreview">
+          <div class="wt-lbl"><svg><use href="#i-clock"/></svg>这笔钱值多少自由时间</div>
+          <div class="wt-big" id="incWtBig">—</div>
+          <div class="wt-note" id="incWtNote">输入金额后实时换算</div>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn btn-primary" id="btnSaveInc" style="flex:2"><svg><use href="#i-check"/></svg>保存收入</button>
+          <button class="btn" id="btnResetInc">重填</button>
+        </div>
+        <div class="help" style="margin-top:8px">保存后自动加进本月收入、本月结余与储蓄率；不会改动你的时薪参数。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-chart"/></svg>本月收入构成</div>
+          <span class="card-hint" id="incBreakHint"></span>
+        </div>
+        <div id="incBreak"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-pen"/></svg>全部额外收入</div>
+          <span class="card-hint" id="incListHint"></span>
+        </div>
+        <div class="rec-list" id="incAllList"></div>
       </div>
     </section>
 
@@ -843,45 +960,103 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       </div>
     </section>
 
-    <!-- ---------- DATA ---------- -->
+    <!-- ---------- DATA (v1.1) ---------- -->
     <section class="view" id="view-data">
       <div class="card">
         <div class="card-head">
-          <div class="card-title"><svg><use href="#i-sync"/></svg>数据备份与恢复</div>
+          <div class="card-title"><svg><use href="#i-sync"/></svg>换手机 · 三步搬家</div>
           <span class="card-hint" id="dataCount"></span>
         </div>
-        <div class="grid g2">
-          <button class="btn btn-soft" id="btnExport" style="min-height:52px"><svg><use href="#i-download"/></svg>导出 JSON 备份</button>
-          <button class="btn btn-soft" id="btnExportCsv" style="min-height:52px"><svg><use href="#i-download"/></svg>导出记账 CSV</button>
-        </div>
-        <div class="row" style="margin-top:14px">
-          <label class="btn" style="min-height:52px;cursor:pointer" for="fileImport"><svg><use href="#i-upload"/></svg>从 JSON 恢复（导入）</label>
-          <input type="file" id="fileImport" accept=".json,application/json" style="display:none">
-        </div>
-        <div class="help" style="margin-top:8px">导入会整体替换当前数据，并自动保留一份"导入前快照"；支持上千条记录，不限条数。</div>
+        <div class="mig-step"><b>1</b><div>旧手机：点「导出备份文件」把 JSON 存进「下载」目录；或点「复制」把备份文本发到微信 / 文件传输助手。</div></div>
+        <div class="mig-step"><b>2</b><div>新手机：安装同一个 App，打开底部「备份」。</div></div>
+        <div class="mig-step"><b>3</b><div>点「选择文件导入」挑那份 JSON，或把备份文本粘贴进来导入。支出、额外收入、时薪参数、存钱罐全部回来。</div></div>
+        <div class="help" style="margin-top:10px">导入有两种方式：<b>覆盖</b>（换机还原，完全用备份替换）和 <b>合并</b>（两台手机都记过账，自动去重后并在一起）。</div>
       </div>
 
       <div class="card">
         <div class="card-head">
-          <div class="card-title"><svg><use href="#i-trash"/></svg>清理示例数据</div>
+          <div class="card-title"><svg><use href="#i-download"/></svg>导出 / 导入</div>
+          <span class="card-hint">文件和文本两种方式都能迁移</span>
+        </div>
+        <div class="grid g2">
+          <button class="btn btn-soft" id="btnExport" style="min-height:52px"><svg><use href="#i-download"/></svg>导出备份文件</button>
+          <button class="btn btn-soft" id="btnExportCsv" style="min-height:52px"><svg><use href="#i-download"/></svg>导出全部 CSV</button>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <label class="btn btn-primary" style="min-height:52px;cursor:pointer" for="fileImport"><svg><use href="#i-upload"/></svg>选择文件导入</label>
+          <input type="file" id="fileImport" accept=".json,.txt,application/json,text/plain" style="display:none">
+          <button class="btn" id="btnUndoImport" style="min-height:52px"><svg><use href="#i-sync"/></svg>撤销上次导入</button>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <div class="field-label">导入方式</div>
+          <div class="seg" id="importMode">
+            <button data-mode="replace" class="on">覆盖导入（换机还原）</button>
+            <button data-mode="merge">合并导入（去重合并）</button>
+          </div>
+        </div>
+        <div class="help" style="margin-top:8px">导入前会自动留一份本机快照，随时可以撤销。单个文件上限 8 MB，记录条数不限。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-phone"/></svg>复制到别处 / 粘贴恢复</div>
+          <span class="card-hint">不方便选文件时用这个</span>
+        </div>
+        <div class="mig-box">
+          <textarea id="backupText" readonly placeholder="点「生成备份文本」后，这里会出现可复制的 JSON"></textarea>
+          <div class="row">
+            <button class="btn btn-soft" id="btnGenText">生成备份文本</button>
+            <button class="btn" id="btnCopyText">复制</button>
+          </div>
+          <textarea id="importText" placeholder="把另一台手机复制过来的备份内容粘贴到这里"></textarea>
+          <button class="btn btn-primary" id="btnImportText">导入这段文本</button>
+        </div>
+        <div class="help" style="margin-top:8px">文本就是完整账本数据，只保存在你自己手机上，不联网、不上传。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-sync"/></svg>本机自动备份</div>
+          <span class="card-hint" id="bkStatus"></span>
+        </div>
+        <div class="row">
+          <button class="btn btn-primary" id="btnBackupNow"><svg><use href="#i-check"/></svg>立即备份到手机</button>
+          <button class="btn" id="btnBackupSnap">只存应用内快照</button>
+        </div>
+        <div class="help" style="margin-top:8px">每天首次打开会自动做一份快照；「立即备份到手机」还会在「下载」目录留一个 JSON，卸载重装也不丢。</div>
+        <div style="margin-top:12px" id="localSnapList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-download"/></svg>「下载」目录里的备份文件</div>
+          <span class="card-hint">可直接点「恢复」</span>
+        </div>
+        <div id="fileBackupList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><svg><use href="#i-trash"/></svg>清理示例数据 / 清空</div>
         </div>
         <div class="help" style="margin-bottom:12px" id="dataSampleStat">--</div>
         <div class="row">
           <button class="btn" id="btnClearSample">只删除示例记录</button>
           <button class="btn btn-danger" id="btnClearAll">清空全部数据</button>
         </div>
-        <div class="help" style="margin-top:8px">示例数据都带 <span class="mini-tag-ex">示例</span> 标记，删除后不会影响你自己记的账。</div>
+        <div class="help" style="margin-top:8px">示例数据都带 <span class="mini-tag-ex">示例</span> 标记；清空前会自动做一份本机快照。</div>
       </div>
 
       <div class="card">
         <div class="card-head">
-          <div class="card-title"><svg><use href="#i-info"/></svg>关于这个小账本</div>
+          <div class="card-title"><svg><use href="#i-info"/></svg>关于这个版本</div>
         </div>
         <div class="help" style="line-height:1.9">
-          · 单文件离线运行：所有样式、脚本、图标都内联在同一个 HTML 里，断网可用，不依赖 CDN。<br>
-          · 数据只保存在当前浏览器的 localStorage，不上传服务器；换设备请用「导出 JSON」迁移。<br>
-          · 时薪公式：净到手（月薪 × 发薪月数 ÷ 12 − 工作成本）÷ 每月在场总时长（在场 + 加班 + 往返通勤）。<br>
-          · 记账换算：金额 ÷ 真实时薪 = 需要工作的小时数。
+          · v1.1：新增「额外收入」（自动并入月度收入）、本地自动备份、覆盖 / 合并导入、文本迁移、手机端备份入口。<br>
+          · 单文件离线运行，断网可用，不依赖 CDN，数据不上传服务器。<br>
+          · 账本存在浏览器 localStorage；「下载」目录里的 JSON 是换机、卸载重装时最稳的保险。<br>
+          · 月度收入 = 折算月均工资 + 当月额外收入；结余 = 收入 − 固定 − 弹性。<br>
+          · 时薪公式：净到手（月薪 × 发薪月数 ÷ 12 − 工作成本）÷ 每月在场总时长（在场 + 加班 + 往返通勤）。
         </div>
       </div>
     </section>
@@ -892,7 +1067,9 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
 <nav class="tabbar" id="tabbar">
   <button class="tab-item active" data-view="home"><svg><use href="#i-home"/></svg>首页</button>
   <button class="tab-item" data-view="ledger"><svg><use href="#i-pen"/></svg>记账</button>
+  <button class="tab-item" data-view="income"><svg><use href="#i-coins"/></svg>收入</button>
   <button class="tab-item" data-view="month"><svg><use href="#i-wallet"/></svg>本月</button>
+  <button class="tab-item" data-view="data"><svg><use href="#i-sync"/></svg>备份</button>
   <button class="tab-item" data-view="rate"><svg><use href="#i-calc"/></svg>时薪</button>
   <button class="tab-item" data-view="piggy"><svg><use href="#i-pig"/></svg>存钱</button>
   <button class="tab-item" data-view="sim"><svg><use href="#i-sliders"/></svg>模拟</button>
@@ -922,6 +1099,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
 
   /* ---------------- 常量 ---------------- */
   var KEY = 'wb_work_piggy_v1';
+  var BACKUP_KEY = KEY + '_backups_v1';
+  var MAX_SNAP = 8;
   var APP = '打工人小账本';
 
   var CATS = [
@@ -938,16 +1117,30 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
   // 这些分类记为固定支出（每月必然发生），其余记为弹性支出
   var FIXED_CATS = { home: 1, phone: 1 };
 
+  // 额外收入分类（工资之外的钱）
+  var INC_CATS = [
+    { id: 'service',  name: '上门服务', icon: 'i-pen',      color: '#3AA98C' },
+    { id: 'project',  name: '工程安装', icon: 'i-house',    color: '#7FB6D8' },
+    { id: 'sale',     name: '销售提成', icon: 'i-shopping', color: '#F2C27E' },
+    { id: 'side',     name: '兼职外快', icon: 'i-coins',    color: '#6EC6AE' },
+    { id: 'refund',   name: '报销退款', icon: 'i-wallet',   color: '#B7A6D9' },
+    { id: 'gift',     name: '红包礼金', icon: 'i-gift',     color: '#F6A9A0' },
+    { id: 'invest',   name: '理财利息', icon: 'i-chart',    color: '#9BCB8F' },
+    { id: 'incother', name: '其他收入', icon: 'i-more',     color: '#A8B3AB' }
+  ];
+  var INC_QUICK = [50, 100, 200, 500, 1000, 2000];
+
   var QUICK = [9.9, 15, 25, 35, 58, 99];
 
   var VIEWS = {
     home:   { title: '今日首页', sub: '今天要处理的事 + 最近记账 + 存钱罐进度' },
     ledger: { title: '10 秒记账', sub: '记完立刻知道这笔花掉了你多少工作时间' },
+    income: { title: '额外收入', sub: '工资之外的钱，自动并入本月收入' },
     month:  { title: '本月账本', sub: '收入、固定支出、弹性支出与预算' },
     rate:   { title: '真实时薪', sub: '把通勤和加班算进去，看看你真正的时间价格' },
     piggy:  { title: '小猪存钱罐', sub: '自由基金目标 + 安全垫 + 存款曲线' },
     sim:    { title: '情景模拟', sub: '换租房、加班、涨薪，分别值多少' },
-    data:   { title: '数据管理', sub: '导出 / 导入 / 清理示例数据' }
+    data:   { title: '备份与迁移', sub: '本机自动备份 · 导出 / 导入 · 换手机搬家' }
   };
 
   var DEFAULT_SETTINGS = {
@@ -963,6 +1156,10 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
   };
 
   var SAMPLE_HISTORY = [3500, 4200, 5000, 6300, 7100, 7900]; // 6 个月前 → 1 个月前
+  var SAMPLE_INCOMES = [
+    { d: 2, amt: 280,  cat: 'service', note: '上门装机调试' },
+    { d: 9, amt: 1200, cat: 'project', note: '监控安装尾款' }
+  ];
   var SAMPLE_RECORDS = [
     { d: 0,  amt: 28, cat: 'food',  note: '公司楼下快餐' },
     { d: 0,  amt: 22, cat: 'coffee', note: '冰美式' },
@@ -1026,6 +1223,10 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i];
     return CATS[CATS.length - 1];
   }
+  function incCatOf(id) {
+    for (var i = 0; i < INC_CATS.length; i++) if (INC_CATS[i].id === id) return INC_CATS[i];
+    return INC_CATS[INC_CATS.length - 1];
+  }
   function icon(id, cls) {
     return '<svg class="' + (cls || '') + '"><use href="#' + id + '"/></svg>';
   }
@@ -1042,14 +1243,20 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       if (d.getMonth() !== t.getMonth()) d = new Date(t.getFullYear(), t.getMonth(), 1);
       return { id: 's' + i, date: ymd(d), amt: r.amt, cat: r.cat, note: r.note, sample: true, ts: d.getTime() + i };
     });
+    var incs = SAMPLE_INCOMES.map(function (r, i) {
+      var d = addDays(t, -r.d);
+      if (d.getMonth() !== t.getMonth()) d = new Date(t.getFullYear(), t.getMonth(), 1);
+      return { id: 'si' + i, date: ymd(d), amt: r.amt, cat: r.cat, note: r.note, sample: true, ts: d.getTime() + i };
+    });
     var hist = SAMPLE_HISTORY.map(function (v, i) {
       var d = new Date(t.getFullYear(), t.getMonth() - (6 - i), 1);
       return { month: monthKey(ymd(d)), value: v, sample: true };
     });
     return {
-      version: 1,
+      version: 2,
       settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
       records: recs,
+      incomes: incs,
       savings: { goal: 20000, saved: 7900, monthly: 1500, name: '那台相机', safe: 25000 },
       history: hist,
       sim: { commute: 45, overtime: 18, raise: 0 },
@@ -1061,7 +1268,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
   function sanitize(raw) {
     var base = defaultState();
     if (!raw || typeof raw !== 'object') return base;
-    var out = { version: 1 };
+    var out = { version: 2 };
     var st = raw.settings && typeof raw.settings === 'object' ? raw.settings : {};
     out.settings = {};
     for (var k in DEFAULT_SETTINGS) {
@@ -1074,6 +1281,15 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       return {
         id: r.id || uid(), date: String(r.date).slice(0, 10),
         amt: Math.max(0, Number(r.amt)), cat: catOf(r.cat).id,
+        note: String(r.note || '').slice(0, 40), sample: !!r.sample, ts: Number(r.ts) || Date.now()
+      };
+    }) : [];
+    out.incomes = Array.isArray(raw.incomes) ? raw.incomes.filter(function (r) {
+      return r && r.date && isFinite(Number(r.amt));
+    }).map(function (r) {
+      return {
+        id: r.id || uid(), date: String(r.date).slice(0, 10),
+        amt: Math.max(0, Number(r.amt)), cat: incCatOf(r.cat).id,
         note: String(r.note || '').slice(0, 40), sample: !!r.sample, ts: Number(r.ts) || Date.now()
       };
     }) : [];
@@ -1151,6 +1367,11 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       .sort(function (a, b) { return a.date < b.date ? 1 : (a.date > b.date ? -1 : b.ts - a.ts); });
   }
 
+  function incomesOfMonth(mk) {
+    return (state.incomes || []).filter(function (r) { return monthKey(r.date) === mk; })
+      .sort(function (a, b) { return a.date < b.date ? 1 : (a.date > b.date ? -1 : b.ts - a.ts); });
+  }
+
   function sumBy(recs, pred) {
     return recs.reduce(function (t, r) { return pred(r) ? t + r.amt : t; }, 0);
   }
@@ -1162,7 +1383,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     var rate = computeRate();
     var fixed = sumBy(recs, function (r) { return !!FIXED_CATS[r.cat]; });
     var flex = sumBy(recs, function (r) { return !FIXED_CATS[r.cat]; });
-    var income = rate.avgMonth;
+    var extraIncome = incomesOfMonth(mk).reduce(function (s, r) { return s + r.amt; }, 0);
+    var income = rate.avgMonth + extraIncome;
     var catMap = {};
     recs.forEach(function (r) {
       if (FIXED_CATS[r.cat]) return;
@@ -1175,7 +1397,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     var dayIdx = t.getDate();
     return {
       key: mk, label: (t.getMonth() + 1) + ' 月', recs: recs,
-      income: income, fixed: fixed, flex: flex,
+      income: income, salaryIncome: rate.avgMonth, extraIncome: extraIncome,
+      fixed: fixed, flex: flex,
       balance: income - fixed - flex,
       budget: Math.max(0, Number(state.settings.flexBudget) || 0),
       cats: cats, dim: dim, dayIdx: dayIdx,
@@ -1269,11 +1492,12 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       itemsCount++;
     }
     // 6) 数据备份建议
-    var realCount = state.records.filter(function (r) { return !r.sample; }).length;
+    var realCount = state.records.filter(function (r) { return !r.sample; }).length +
+      (state.incomes || []).filter(function (r) { return !r.sample; }).length;
     if (realCount >= 30) {
       items.push({
         kind: 'info', title: '已积累 ' + realCount + ' 条记录',
-        sub: '建议现在导出一次 JSON 备份，防止浏览器清理缓存',
+        sub: '每天已自动做本机快照，换手机前记得再导出一次 JSON',
         amt: '去备份', go: 'data'
       });
       itemsCount++;
@@ -1399,7 +1623,11 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     $('hRate').textContent = Math.round(rate.hourly);
     $('hRateSub').textContent = '月均到手 ' + money(rate.avgMonth) + ' · 在场 ' + Math.round(rate.monthHours) + ' 小时';
     $('hBalance').textContent = money(mk.balance);
-    $('hBalanceSub').textContent = '收入 ' + money(mk.income) + ' − 固定 ' + money(mk.fixed) + ' − 弹性 ' + money(mk.flex);
+    $('hBalanceSub').textContent = '收入 ' + money(mk.income) + '（含额外 ' + money(mk.extraIncome) + '） − 固定 ' + money(mk.fixed) + ' − 弹性 ' + money(mk.flex);
+    $('homeInc').textContent = money(mk.extraIncome);
+    $('homeIncSub').textContent = mk.extraIncome > 0
+      ? '本月 ' + incomesOfMonth(mk.key).length + ' 笔外快，已并入月度收入 ' + money(mk.income)
+      : '工资之外的钱，记一笔就并入本月收入';
 
     var streak = computeStreak();
     var flexToday = mk.avgPerDay;
@@ -1471,13 +1699,138 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     renderWorkPreview();
   }
 
+  /* ---------------- 额外收入 ---------------- */
+  function incRow(r, opts) {
+    opts = opts || {};
+    var c = incCatOf(r.cat);
+    var rate = computeRate();
+    var h = rate.hourly > 0 ? r.amt / rate.hourly : 0;
+    var dateTxt = r.date === todayStr() ? '今天' : (r.date.slice(5, 7) + '/' + r.date.slice(8, 10));
+    return '' +
+      '<div class="rec">' +
+        '<div class="rec-ico" style="background:' + c.color + '22">' + icon(c.icon) + '</div>' +
+        '<div class="rec-main">' +
+          '<div class="rec-t1">+' + esc(r.note ? r.note : c.name) + (r.sample ? '<span class="mini-tag-ex">示例</span>' : '') + '</div>' +
+          '<div class="rec-t2"><span>' + esc(c.name) + '</span><span>·</span><span>' + dateTxt + '</span></div>' +
+        '</div>' +
+        '<div class="rec-right">' +
+          '<div class="rec-amt in">+' + money2(r.amt) + '</div>' +
+          '<div class="rec-work in">≈ ' + segHourText(h) + '自由</div>' +
+        '</div>' +
+        (opts.del ? '<button class="mini-del" data-del-income="' + r.id + '" title="删除这条收入">' + icon('i-trash') + '</button>' : '') +
+      '</div>';
+  }
+
+  function renderIncChips() {
+    $('incCatChips').innerHTML = INC_CATS.map(function (c) {
+      return '<button class="chip" data-inc-cat="' + c.id + '">' + icon(c.icon) + esc(c.name) + '</button>';
+    }).join('');
+    $('incQuickAmt').innerHTML = INC_QUICK.map(function (v) {
+      return '<button type="button" data-inc-amt="' + v + '">¥' + v + '</button>';
+    }).join('');
+    setActiveIncCat(state.draftIncCat || 'service');
+  }
+
+  function setActiveIncCat(id) {
+    state.draftIncCat = id;
+    var nodes = $('incCatChips').querySelectorAll('.chip');
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].classList.toggle('on', nodes[i].getAttribute('data-inc-cat') === id);
+    }
+  }
+
+  function renderIncPreview() {
+    var v = parseFloat($('inIncAmt').value);
+    var rate = computeRate();
+    if (!isFinite(v) || v <= 0) {
+      $('incWtBig').textContent = '—';
+      $('incWtNote').textContent = '输入金额后，按真实时薪 ' + Math.round(rate.hourly) + ' 元/小时换算';
+      return;
+    }
+    var h = rate.hourly > 0 ? v / rate.hourly : 0;
+    $('incWtBig').textContent = '≈ ' + segHourText(h);
+    var dailyH = Math.max(0.1, rate.atWork + rate.dailyCommute + rate.ot / rate.days);
+    $('incWtNote').innerHTML = '相当于少上 <b>' + (Math.round(h / dailyH * 100) / 100) + ' 天班</b>，保存后直接加进本月收入。';
+  }
+
+  function renderIncome() {
+    var m = computeMonth();
+    var rate = computeRate();
+    var list = incomesOfMonth(m.key);
+    var yearPrefix = String(new Date().getFullYear());
+    var yearList = (state.incomes || []).filter(function (r) { return String(r.date).slice(0, 4) === yearPrefix; });
+    var yearSum = yearList.reduce(function (s, r) { return s + r.amt; }, 0);
+
+    $('incTotalBig').textContent = money(m.income);
+    $('incTotalSub').textContent = '工资 ' + money(m.salaryIncome) + ' + 额外 ' + money(m.extraIncome) + '，已计入本月结余';
+    var pct = m.income > 0 ? m.extraIncome / m.income * 100 : 0;
+    $('incBar').style.width = Math.min(100, pct).toFixed(1) + '%';
+    $('incBarNote').textContent = m.extraIncome > 0
+      ? '额外收入占本月总收入的 ' + pct.toFixed(1) + '%'
+      : '本月还没有额外收入，接了活儿记一笔就能看到占比';
+    $('incMonth').textContent = money(m.extraIncome);
+    $('incMonthSub').textContent = '本月 ' + list.length + ' 笔 · 已并入月度收入';
+    $('incYear').textContent = money(yearSum);
+    $('incYearSub').textContent = yearPrefix + ' 年共 ' + yearList.length + ' 笔';
+    $('incHours').textContent = rate.hourly > 0 ? segHourText(m.extraIncome / rate.hourly) : '—';
+
+    var map = {};
+    list.forEach(function (r) { map[r.cat] = (map[r.cat] || 0) + r.amt; });
+    var cats = Object.keys(map).map(function (id) {
+      var c = incCatOf(id);
+      return { id: id, name: c.name, color: c.color, icon: c.icon, amt: map[id] };
+    }).sort(function (a, b) { return b.amt - a.amt; });
+    $('incBreakHint').textContent = '工资 + ' + cats.length + ' 类外快';
+    if (!cats.length) {
+      $('incBreak').innerHTML = '<div class="empty">本月还没有额外收入，先在上面记一笔吧</div>';
+    } else {
+      var total = m.income;
+      var html = '<div style="margin-bottom:12px">' +
+        '<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">' +
+        '<span style="font-weight:700">工资收入（月均到手）</span><span class="num" style="font-weight:800">' + money(m.salaryIncome) + '</span></div>' +
+        '<div class="bar thin"><i style="width:' + (total > 0 ? m.salaryIncome / total * 100 : 0).toFixed(1) + '%"></i></div></div>';
+      html += cats.map(function (c) {
+        var w = total > 0 ? c.amt / total * 100 : 0;
+        return '<div style="margin-bottom:11px">' +
+          '<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">' +
+            '<span style="display:flex;align-items:center;gap:6px;font-weight:600"><svg class="mcat-ic" style="color:' + c.color + '"><use href="#' + c.icon + '"/></svg>' + esc(c.name) +
+              '<span style="color:var(--muted);font-weight:500">' + w.toFixed(1) + '%</span></span>' +
+            '<span class="num" style="font-weight:700;color:var(--mint-deep)">+' + money(c.amt) + '</span>' +
+          '</div>' +
+          '<div class="bar thin"><i style="width:' + w.toFixed(1) + '%;background:' + c.color + '"></i></div>' +
+        '</div>';
+      }).join('');
+      $('incBreak').innerHTML = html;
+    }
+
+    var all = (state.incomes || []).slice().sort(function (a, b) {
+      if (a.date === b.date) return b.ts - a.ts;
+      return a.date < b.date ? 1 : -1;
+    });
+    $('incListHint').textContent = '共 ' + all.length + ' 笔';
+    if (!all.length) {
+      $('incAllList').innerHTML = '<div class="empty">还没有额外收入记录</div>';
+    } else {
+      var byMonth = {};
+      all.forEach(function (r) { (byMonth[monthKey(r.date)] = byMonth[monthKey(r.date)] || []).push(r); });
+      $('incAllList').innerHTML = Object.keys(byMonth).sort().reverse().map(function (k) {
+        var sum = byMonth[k].reduce(function (s, r) { return s + r.amt; }, 0);
+        return '<div style="display:flex;justify-content:space-between;margin:12px 0 2px;font-size:12px;color:var(--muted);font-weight:700">' +
+          '<span>' + k.slice(0, 4) + ' 年 ' + Number(k.slice(5, 7)) + ' 月</span><span class="num">+' + money(sum) + '</span></div>' +
+          byMonth[k].map(function (r) { return incRow(r, { del: true }); }).join('');
+      }).join('');
+    }
+    if (!$('inIncDate').value) $('inIncDate').value = todayStr();
+    renderIncPreview();
+  }
+
   /* ---------------- 本月账本 ---------------- */
   function renderMonth() {
     $('exBannerMonth').innerHTML = sampleBanner();
     var m = computeMonth();
     $('mMonthLabel').textContent = m.label;
     $('mIncome').innerHTML = money(m.income) + '<small>元</small>';
-    $('mIncomeSub').textContent = money(Number(state.settings.salary) || 0) + ' × ' + state.settings.months + ' 个月 ÷ 12';
+    $('mIncomeSub').textContent = '工资 ' + money(m.salaryIncome) + ' + 额外收入 ' + money(m.extraIncome);
     $('mFixed').innerHTML = money(m.fixed) + '<small>元</small>';
     $('mFixedSub').textContent = m.fixed > 0 ? '含 ' + m.recs.filter(function (r) { return FIXED_CATS[r.cat]; }).length + ' 笔固定支出' : '本月还没记固定支出';
     $('mFlex').innerHTML = money(m.flex) + '<small>元</small>';
@@ -1486,7 +1839,9 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     var saveRate = m.income > 0 ? m.balance / m.income : 0;
     var hours = m.rate.hourly > 0 ? m.flex / m.rate.hourly : 0;
     $('mSummary').innerHTML =
-      kv('到手收入', money(m.income), 'mint') +
+      kv('工资收入（月均到手）', money(m.salaryIncome), 'mint') +
+      kv('额外收入（' + incomesOfMonth(m.key).length + ' 笔）', '+ ' + money(m.extraIncome), 'mint') +
+      kv('月度总收入', money(m.income), 'mint') +
       kv('固定支出（房租·水电·订阅）', '− ' + money(m.fixed), 'red') +
       kv('弹性支出（吃喝·购物·娱乐）', '− ' + money(m.flex), 'red') +
       kv('可用结余', money(m.balance), m.balance >= 0 ? 'mint' : 'red') +
@@ -1843,19 +2198,65 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     $('simTable').innerHTML = h;
   }
 
-  /* ---------------- 数据管理 ---------------- */
+  /* ---------------- 备份与迁移 ---------------- */
   function renderData() {
     var real = state.records.filter(function (r) { return !r.sample; }).length;
     var samp = state.records.length - real;
-    $('dataCount').textContent = '共 ' + state.records.length + ' 条记录';
-    $('dataSampleStat').innerHTML = '当前共 <b>' + state.records.length + '</b> 条记录：其中示例 <b>' + samp + '</b> 条，你自己记的 <b>' + real + '</b> 条；存款历史 ' + state.history.length + ' 个月。' +
-      (real >= 30 ? '<br><span style="color:#B8722E">记录已积累 ' + real + ' 条，建议现在导出备份。</span>' : '');
+    var incReal = (state.incomes || []).filter(function (r) { return !r.sample; }).length;
+    $('dataCount').textContent = '共 ' + state.records.length + ' 笔支出 · ' + (state.incomes || []).length + ' 笔收入';
+    $('dataSampleStat').innerHTML = '当前共 <b>' + state.records.length + '</b> 笔支出、<b>' + (state.incomes || []).length + '</b> 笔收入：' +
+      '示例支出 <b>' + samp + '</b> 笔，你自己记的支出 <b>' + real + '</b> 笔、收入 <b>' + incReal + '</b> 笔；存款历史 ' + state.history.length + ' 个月。' +
+      (real >= 30 ? '<br><span style="color:#B8722E">记录已积累 ' + real + ' 笔，换手机前记得导出一次备份。</span>' : '');
+
+    var snaps = readSnaps();
+    $('bkStatus').textContent = snaps.length ? '已存 ' + snaps.length + ' 份快照' : '暂无快照';
+    if (!snaps.length) {
+      $('localSnapList').innerHTML = '<div class="empty">还没有本机快照，点上面「立即备份到手机」生成一份</div>';
+    } else {
+      $('localSnapList').innerHTML = snaps.map(function (s) {
+        return '<div class="bk-item">' +
+          '<div class="bk-ic">' + icon('i-sync') + '</div>' +
+          '<div class="bk-main">' +
+            '<div class="bk-t">' + formatTime(s.at) + '<span class="bk-tag ' + (s.reason === '自动' ? 'auto' : '') + '">' + esc(s.reason) + '</span></div>' +
+            '<div class="bk-sub">' + s.records + ' 笔支出 · ' + (s.incomes || 0) + ' 笔收入 · ' + Math.round((s.size || 0) / 1024) + ' KB</div>' +
+          '</div>' +
+          '<div class="bk-acts">' +
+            '<button class="btn btn-soft" data-restore-snap="' + s.id + '">恢复</button>' +
+            '<button class="btn" data-export-snap="' + s.id + '">导出</button>' +
+            '<button class="btn btn-danger" data-del-snap="' + s.id + '">删</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    var files = nativeBackupList();
+    var box = $('fileBackupList');
+    if (files === null) {
+      box.innerHTML = '<div class="help">当前不在安卓 App 内（或系统版本较旧），请用上面的「选择文件导入」从手机里挑备份文件。</div>';
+    } else if (!files.length) {
+      box.innerHTML = '<div class="empty">「下载」目录还没有自动备份文件，点「立即备份到手机」生成一份</div>';
+    } else {
+      box.innerHTML = files.map(function (f) {
+        return '<div class="bk-item">' +
+          '<div class="bk-ic">' + icon('i-download') + '</div>' +
+          '<div class="bk-main">' +
+            '<div class="bk-t">' + esc(f.name) + '</div>' +
+            '<div class="bk-sub">' + formatTime(f.at) + ' · ' + Math.round((f.size || 0) / 1024) + ' KB · 手机「下载」目录</div>' +
+          '</div>' +
+          '<div class="bk-acts">' +
+            '<button class="btn btn-soft" data-restore-file="' + esc(f.name) + '">恢复</button>' +
+            '<button class="btn btn-danger" data-del-file="' + esc(f.name) + '">删</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
   }
 
   /* ---------------- 统一刷新入口（唯一调度点） ---------------- */
   function refreshAll() {
     renderHome();
     renderLedger();
+    renderIncome();
     renderMonth();
     renderRate();
     renderPiggy();
@@ -1883,7 +2284,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     for (var k = 0; k < tabs.length; k++) tabs[k].classList.toggle('active', tabs[k].getAttribute('data-view') === view);
     $('pageTitle').textContent = VIEWS[view].title;
     $('pageSub').textContent = VIEWS[view].sub;
-    if (view === 'home' || view === 'month') renderHome(), renderMonth();
+    if (view === 'home' || view === 'month' || view === 'income') { renderHome(); renderMonth(); renderIncome(); }
+    if (view === 'data') renderData();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1949,6 +2351,40 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     });
   }
 
+  function saveIncome() {
+    var amt = parseFloat($('inIncAmt').value);
+    if (!isFinite(amt) || amt <= 0) { toast('先填一个大于 0 的金额', 'i-info'); $('inIncAmt').focus(); return; }
+    if (amt > 10000000) { toast('金额太大了，检查一下？', 'i-info'); return; }
+    var d = $('inIncDate').value || todayStr();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) d = todayStr();
+    state.incomes = state.incomes || [];
+    state.incomes.push({
+      id: uid(), date: d, amt: Math.round(amt * 100) / 100,
+      cat: state.draftIncCat || 'service', note: $('inIncNote').value.trim(),
+      sample: false, ts: Date.now()
+    });
+    save();
+    $('inIncAmt').value = '';
+    $('inIncNote').value = '';
+    $('inIncDate').value = todayStr();
+    refreshAll();
+    toast('收入已记入：+' + money2(amt) + '，本月收入已更新', 'i-coins');
+    maybeAutoBackup();
+  }
+
+  function deleteIncome(id) {
+    var r = (state.incomes || []).filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    confirmDialog('删除这笔收入？',
+      (r.note ? r.note + ' · ' : '') + '+' + money2(r.amt) + '（' + r.date + '）删除后本月收入会同步减少。',
+      '删除', true, function () {
+        state.incomes = state.incomes.filter(function (x) { return x.id !== id; });
+        save();
+        refreshAll();
+        toast('已删除，本月收入已更新', 'i-trash');
+      });
+  }
+
   function readSettingsInputs() {
     var s = state.settings;
     var pairs = [
@@ -2005,28 +2441,290 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     }
   }
 
-  function exportJSON() {
-    var payload = JSON.parse(JSON.stringify(state));
+  /* ---------------- 本地备份 / 换机迁移 ---------------- */
+  function cleanStateForBackup() {
+    var p = JSON.parse(JSON.stringify(state));
+    delete p.draftCat;
+    delete p.draftIncCat;
+    delete p.ratePreview;
+    return p;
+  }
+
+  function formatTime(ts) {
+    var d = new Date(Number(ts) || Date.now());
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function readSnaps() {
+    try {
+      var a = JSON.parse(localStorage.getItem(BACKUP_KEY) || '[]');
+      if (!Array.isArray(a)) return [];
+      return a.filter(function (b) { return b && b.id && b.data; });
+    } catch (e) { return []; }
+  }
+
+  function writeSnaps(a) {
+    try { localStorage.setItem(BACKUP_KEY, JSON.stringify(a)); return true; }
+    catch (e) {
+      try { localStorage.setItem(BACKUP_KEY, JSON.stringify(a.slice(0, Math.max(1, a.length - 2)))); return true; }
+      catch (e2) { return false; }
+    }
+  }
+
+  function makeSnapshot(reason, silent) {
+    var p = cleanStateForBackup();
+    var data = JSON.stringify(p);
+    var snap = {
+      id: uid(), at: Date.now(), reason: reason || '手动',
+      records: (p.records || []).length,
+      incomes: (p.incomes || []).length,
+      size: data.length, data: data
+    };
+    var a = readSnaps();
+    a.unshift(snap);
+    if (a.length > MAX_SNAP) a = a.slice(0, MAX_SNAP);
+    if (!writeSnaps(a)) {
+      if (!silent) toast('快照保存失败，请先导出备份文件', 'i-info');
+      return null;
+    }
+    if (!silent) toast('已生成一份本机快照', 'i-check');
+    return snap;
+  }
+
+  function maybeAutoBackup() {
+    // 每天首次打开（或当天首次新增记录）自动留一份应用内快照 + 一份手机下载目录文件
+    var d = todayStr();
+    try {
+      if (localStorage.getItem(KEY + '_auto_snap_day') === d) return;
+      var real = state.records.filter(function (r) { return !r.sample; }).length +
+        (state.incomes || []).filter(function (r) { return !r.sample; }).length;
+      if (real <= 0) return;
+      makeSnapshot('自动', true);
+      localStorage.setItem(KEY + '_auto_snap_day', d);
+      autoBackupToPhone();
+    } catch (e) {}
+  }
+
+  function restoreSnapshot(id) {
+    var s = readSnaps().filter(function (x) { return x.id === id; })[0];
+    if (!s) { toast('快照不存在', 'i-info'); return; }
+    confirmDialog('恢复这份快照？',
+      formatTime(s.at) + ' 的「' + s.reason + '」快照，含 ' + s.records + ' 笔支出、' + (s.incomes || 0) + ' 笔收入。当前数据会先自动备份一份。',
+      '恢复', false, function () {
+        try {
+          makeSnapshot('恢复前', true);
+          state = sanitize(JSON.parse(s.data));
+          save();
+          fillRateInputs();
+          refreshAll();
+          toast('已恢复到 ' + formatTime(s.at), 'i-check');
+        } catch (e) { toast('快照损坏，恢复失败', 'i-info'); }
+      });
+  }
+
+  function exportSnapshot(id) {
+    var s = readSnaps().filter(function (x) { return x.id === id; })[0];
+    if (!s) return;
+    var d = new Date(s.at);
+    var name = '小账本快照_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) +
+      '_' + pad(d.getHours()) + pad(d.getMinutes()) + '.json';
+    var obj = JSON.parse(s.data);
+    obj.app = APP;
+    obj.exportedAt = new Date().toISOString();
+    downloadFile(name, JSON.stringify(obj, null, 2));
+  }
+
+  function deleteSnapshot(id) {
+    writeSnaps(readSnaps().filter(function (x) { return x.id !== id; }));
+    renderData();
+    toast('快照已删除', 'i-trash');
+  }
+
+  function hasNativeBackup() {
+    try { return !!(window.AndroidBridge && typeof window.AndroidBridge.saveBackup === 'function'); }
+    catch (e) { return false; }
+  }
+
+  function buildBackupPayload() {
+    var payload = cleanStateForBackup();
     payload.app = APP;
+    payload.backupVersion = 2;
     payload.exportedAt = new Date().toISOString();
+    return JSON.stringify(payload, null, 2);
+  }
+
+  function backupFileName() {
     var d = new Date();
-    var name = '小账本备份_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json';
-    if (downloadFile(name, JSON.stringify(payload, null, 2))) toast('备份已导出，记得存到云盘', 'i-download');
-    else toast('导出失败，请换浏览器试一次', 'i-info');
+    return '小账本备份_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) +
+      '_' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds()) +
+      '_' + ('00' + d.getMilliseconds()).slice(-3) + '.json';
+  }
+
+  function saveBackupToPhone(silent) {
+    // 优先交给原生桥直接写进「下载」目录：无需选位置，卸载 App 也不丢
+    if (hasNativeBackup()) {
+      try {
+        var text = buildBackupPayload();
+        var bytes = new TextEncoder().encode(text);
+        var bin = '';
+        for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        var res = window.AndroidBridge.saveBackup(backupFileName(), btoa(bin));
+        if (res === 'OK') {
+          if (!silent) toast('已备份到手机「下载 / 打工人小账本」', 'i-download');
+          return true;
+        }
+        if (res === 'PICKER') {
+          if (silent) return false;
+          downloadFile(backupFileName(), text);
+          return true;
+        }
+      } catch (e) {}
+    }
+    if (!silent) {
+      var name2 = backupFileName();
+      if (downloadFile(name2, buildBackupPayload())) toast('备份已导出，记得存到云盘', 'i-download');
+      else toast('导出失败，请重试', 'i-info');
+      return true;
+    }
+    return false;
+  }
+
+  function autoBackupToPhone() {
+    if (!hasNativeBackup()) return;
+    var d = todayStr();
+    try {
+      if (localStorage.getItem(KEY + '_auto_file_day') === d) return;
+      if (saveBackupToPhone(true)) localStorage.setItem(KEY + '_auto_file_day', d);
+    } catch (e) {}
+  }
+
+  function nativeBackupList() {
+    try {
+      if (!window.AndroidBridge || typeof window.AndroidBridge.listBackups !== 'function') return null;
+      var a = JSON.parse(window.AndroidBridge.listBackups() || '[]');
+      return Array.isArray(a) ? a : [];
+    } catch (e) { return null; }
+  }
+
+  function restoreNativeBackup(name) {
+    try {
+      var b64 = window.AndroidBridge.readBackup(name);
+      if (!b64) { toast('读不到这个文件，请用「选择文件导入」', 'i-info'); return; }
+      var bin = atob(b64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      var text = new TextDecoder().decode(bytes);
+      applyImportData(JSON.parse(text), '下载目录：' + name);
+    } catch (e) { toast('文件读取失败，请用「选择文件导入」', 'i-info'); }
+  }
+
+  function deleteNativeBackup(name) {
+    confirmDialog('删除这个备份文件？',
+      name + '（只删手机「下载」目录里的这份文件，不影响当前账本）。',
+      '删除', true, function () {
+        try {
+          var r = window.AndroidBridge.deleteBackup(name);
+          toast(r === 'OK' ? '备份文件已删除' : '删除失败，可到「下载」目录手动删',
+            r === 'OK' ? 'i-trash' : 'i-info');
+          renderData();
+        } catch (e) { toast('删除失败', 'i-info'); }
+      });
+  }
+
+  function exportJSON() {
+    makeSnapshot('导出前', true);
+    if (hasNativeBackup()) saveBackupToPhone(false);
+    else {
+      var name = backupFileName();
+      if (downloadFile(name, buildBackupPayload())) toast('备份已导出，记得存到云盘', 'i-download');
+      else toast('导出失败，请换浏览器试一次', 'i-info');
+    }
+    renderData();
   }
 
   function exportCSV() {
-    var rows = [['日期', '分类', '金额', '备注', '标记']];
-    state.records.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).forEach(function (r) {
-      rows.push([r.date, catOf(r.cat).name, String(r.amt), (r.note || '').replace(/"/g, '""'), r.sample ? '示例' : '']);
+    var rows = [['日期', '类型', '分类', '金额', '备注', '标记']];
+    var all = [];
+    state.records.forEach(function (r) { all.push({ r: r, inc: false }); });
+    (state.incomes || []).forEach(function (r) { all.push({ r: r, inc: true }); });
+    all.sort(function (a, b) { return a.r.date < b.r.date ? 1 : -1; }).forEach(function (x) {
+      var r = x.r;
+      rows.push([
+        r.date, x.inc ? '收入' : '支出',
+        x.inc ? incCatOf(r.cat).name : catOf(r.cat).name,
+        (x.inc ? '+' : '-') + String(r.amt),
+        (r.note || '').replace(/"/g, '""'), r.sample ? '示例' : ''
+      ]);
     });
     var csv = '\ufeff' + rows.map(function (r) {
       return r.map(function (c) { return '"' + String(c) + '"'; }).join(',');
     }).join('\r\n');
     var d = new Date();
-    if (downloadFile('记账明细_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.csv', csv, 'text/csv;charset=utf-8')) {
-      toast('CSV 已导出，可用 Excel 打开', 'i-download');
+    if (downloadFile('账本明细_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.csv', csv, 'text/csv;charset=utf-8')) {
+      toast('CSV 已导出（含额外收入），可用 Excel 打开', 'i-download');
     } else toast('导出失败', 'i-info');
+  }
+
+  var importMode = 'replace';
+
+  function normalizeImport(data) {
+    if (!data || typeof data !== 'object') return null;
+    if (!data.records && !data.incomes && !data.settings) return null;
+    return sanitize(data);
+  }
+
+  function mergeImport(cur, next) {
+    var out = JSON.parse(JSON.stringify(cur));
+    out.records = out.records || [];
+    out.incomes = out.incomes || [];
+    out.history = out.history || [];
+    function mergeArr(a, b) {
+      var ids = {}, keys = {};
+      a.forEach(function (r) {
+        ids[r.id] = 1;
+        keys[[r.date, r.amt, r.cat, r.note].join('|')] = 1;
+      });
+      var added = 0;
+      (b || []).forEach(function (r) {
+        var k = [r.date, r.amt, r.cat, r.note].join('|');
+        if (ids[r.id] || keys[k]) return;
+        ids[r.id] = 1; keys[k] = 1;
+        a.push(r); added++;
+      });
+      return added;
+    }
+    var n = mergeArr(out.records, next.records) + mergeArr(out.incomes, next.incomes);
+    var have = {};
+    out.history.forEach(function (h) { have[h.month] = 1; });
+    (next.history || []).forEach(function (h) {
+      if (!have[h.month]) { out.history.push(h); have[h.month] = 1; }
+    });
+    return { state: out, added: n };
+  }
+
+  function applyImportData(data, label) {
+    var next = normalizeImport(data);
+    if (!next) { toast('文件里没有可识别的账本数据', 'i-info'); return; }
+    var merged = importMode === 'merge' ? mergeImport(state, next) : null;
+    var finalState = merged ? merged.state : next;
+    var cnt = finalState.records.length;
+    var incCnt = (finalState.incomes || []).length;
+    var desc = merged
+      ? '合并导入：新增 ' + merged.added + ' 笔（自动去重），合并后共 ' + cnt + ' 笔支出、' + incCnt + ' 笔收入。时薪参数和存钱罐保持当前设置不变。'
+      : '覆盖导入：用 ' + label + ' 的 ' + cnt + ' 笔支出、' + incCnt + ' 笔收入完整替换当前数据（含时薪参数与存钱罐）。';
+    confirmDialog('确认' + (merged ? '合并' : '覆盖') + '导入？',
+      desc + ' 导入前会自动留一份本机快照，可用「撤销上次导入」找回。',
+      '确认导入', false, function () {
+        makeSnapshot('导入前', true);
+        try { localStorage.setItem(KEY + '_snapshot', JSON.stringify(cleanStateForBackup())); } catch (e) {}
+        state = finalState;
+        save();
+        fillRateInputs();
+        $('inAmt').value = ''; $('inNote').value = '';
+        $('inIncAmt').value = ''; $('inIncNote').value = '';
+        refreshAll();
+        toast(merged ? '合并完成：新增 ' + merged.added + ' 笔' : '导入完成：' + cnt + ' 笔记录', 'i-upload');
+      });
   }
 
   function importJSON(file) {
@@ -2036,22 +2734,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     reader.onload = function () {
       var data;
       try { data = JSON.parse(String(reader.result)); }
-      catch (e) { toast('不是有效的 JSON 文件', 'i-info'); return; }
-      if (!data || typeof data !== 'object' || (!data.records && !data.settings)) {
-        toast('文件里没有可识别的账本数据', 'i-info'); return;
-      }
-      var snap = JSON.stringify(state);
-      var next = sanitize(data);
-      confirmDialog('确认导入？',
-        '将导入 ' + next.records.length + ' 条记录（其中示例 ' + next.records.filter(function (r) { return r.sample; }).length + ' 条）。当前数据会被替换，旧数据自动备份到浏览器本地快照（可用「撤销导入」找回）。',
-        '导入并替换', false, function () {
-          try { localStorage.setItem(KEY + '_snapshot', snap); } catch (e) {}
-          state = next;
-          save();
-          fillRateInputs();
-          refreshAll();
-          toast('导入完成：' + next.records.length + ' 条记录', 'i-upload');
-        });
+      catch (e) { toast('不是有效的 JSON 备份文件', 'i-info'); return; }
+      applyImportData(data, file.name || '备份文件');
     };
     reader.onerror = function () { toast('读取文件失败', 'i-info'); };
     reader.readAsText(file, 'utf-8');
@@ -2074,8 +2758,11 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
   function clearSample() {
     var n = state.records.filter(function (r) { return r.sample; }).length;
     if (n === 0) { toast('没有示例记录了', 'i-check'); return; }
-    confirmDialog('删除全部示例数据？', '将移除 ' + n + ' 条示例记录、示例存款历史。你之后自己记的账不受影响。', '删除示例', true, function () {
+    var ni = (state.incomes || []).filter(function (r) { return r.sample; }).length;
+    confirmDialog('删除全部示例数据？', '将移除 ' + n + ' 条示例支出、' + ni + ' 笔示例收入与示例存款历史。你自己记的账不受影响。', '删除示例', true, function () {
+      makeSnapshot('清理前', true);
       state.records = state.records.filter(function (r) { return !r.sample; });
+      state.incomes = (state.incomes || []).filter(function (r) { return !r.sample; });
       state.history = state.history.filter(function (h) { return !h.sample; });
       save();
       refreshAll();
@@ -2084,7 +2771,8 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
   }
 
   function clearAll() {
-    confirmDialog('清空全部数据？', '所有记账、时薪参数、存钱罐目标都会被清空，并恢复为初始演示状态。此操作不可撤销，建议先导出备份。', '确认清空', true, function () {
+    confirmDialog('清空全部数据？', '所有记账、额外收入、时薪参数、存钱罐目标都会被清空，并恢复为初始演示状态。清空前会自动留一份本机快照，建议先导出备份文件。', '确认清空', true, function () {
+      makeSnapshot('清空前', true);
       // 二次确认：要求输入关键词，防误触
       var word = '清空';
       var t = window.prompt('请输入「' + word + '」两个字以最终确认：', '');
@@ -2095,6 +2783,9 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       fillRateInputs();
       $('inAmt').value = '';
       $('inNote').value = '';
+      $('inIncAmt').value = '';
+      $('inIncNote').value = '';
+      $('inIncDate').value = todayStr();
       refreshAll();
       toast('已清空并重置为演示数据', 'i-trash');
     });
@@ -2136,6 +2827,32 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       $('inAmt').value = '';
       $('inNote').value = '';
       renderWorkPreview();
+    });
+  }
+
+  function bindIncome() {
+    $('incCatChips').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-inc-cat]') : null;
+      if (!b) return;
+      setActiveIncCat(b.getAttribute('data-inc-cat'));
+    });
+    $('incQuickAmt').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-inc-amt]') : null;
+      if (!b) return;
+      var cur = parseFloat($('inIncAmt').value) || 0;
+      var val = parseFloat(b.getAttribute('data-inc-amt'));
+      $('inIncAmt').value = (cur > 0 ? Math.round((cur + val) * 100) / 100 : val);
+      renderIncPreview();
+    });
+    $('inIncAmt').addEventListener('input', renderIncPreview);
+    $('inIncAmt').addEventListener('keydown', function (e) { if (e.key === 'Enter') saveIncome(); });
+    $('inIncNote').addEventListener('keydown', function (e) { if (e.key === 'Enter') saveIncome(); });
+    $('btnSaveInc').addEventListener('click', saveIncome);
+    $('btnResetInc').addEventListener('click', function () {
+      $('inIncAmt').value = '';
+      $('inIncNote').value = '';
+      $('inIncDate').value = todayStr();
+      renderIncPreview();
     });
   }
 
@@ -2224,10 +2941,72 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
       importJSON(f);
       e.target.value = '';
     });
+    $('btnUndoImport').addEventListener('click', undoImport);
     $('btnClearSample').addEventListener('click', clearSample);
     $('btnClearAll').addEventListener('click', clearAll);
-    var undo = $('btnUndoImport');
-    if (undo) undo.addEventListener('click', undoImport);
+
+    $('importMode').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-mode]') : null;
+      if (!b) return;
+      importMode = b.getAttribute('data-mode');
+      var all = $('importMode').querySelectorAll('button');
+      for (var i = 0; i < all.length; i++) all[i].classList.toggle('on', all[i] === b);
+    });
+
+    $('btnBackupNow').addEventListener('click', function () {
+      makeSnapshot('手动', true);
+      saveBackupToPhone(false);
+      renderData();
+    });
+    $('btnBackupSnap').addEventListener('click', function () {
+      makeSnapshot('手动', false);
+      renderData();
+    });
+
+    $('btnGenText').addEventListener('click', function () {
+      $('backupText').value = buildBackupPayload();
+      toast('备份文本已生成，可复制发到另一台手机', 'i-check');
+    });
+    $('btnCopyText').addEventListener('click', function () {
+      if (!$('backupText').value) $('backupText').value = buildBackupPayload();
+      var el = $('backupText');
+      el.focus();
+      el.select();
+      try { el.setSelectionRange(0, el.value.length); } catch (e) {}
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.value).then(
+          function () { toast('已复制，去微信粘贴给自己吧', 'i-check'); },
+          function () { toast('复制失败，请长按文本手动全选复制', 'i-info'); }
+        );
+        return;
+      }
+      toast(ok ? '已复制，去微信粘贴给自己吧' : '复制失败，请长按文本手动全选复制',
+        ok ? 'i-check' : 'i-info');
+    });
+    $('btnImportText').addEventListener('click', function () {
+      var txt = $('importText').value.trim();
+      if (!txt) { toast('先把备份内容粘贴进来', 'i-info'); return; }
+      var data;
+      try { data = JSON.parse(txt); }
+      catch (e) { toast('这段文本不是有效的 JSON 备份', 'i-info'); return; }
+      applyImportData(data, '粘贴的备份文本');
+    });
+
+    // 快照 / 下载目录文件 / 收入明细里的操作按钮，统一事件委托
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest(
+        '[data-restore-snap],[data-export-snap],[data-del-snap],[data-restore-file],[data-del-file],[data-del-income]'
+      ) : null;
+      if (!b) return;
+      if (b.hasAttribute('data-restore-snap')) restoreSnapshot(b.getAttribute('data-restore-snap'));
+      else if (b.hasAttribute('data-export-snap')) exportSnapshot(b.getAttribute('data-export-snap'));
+      else if (b.hasAttribute('data-del-snap')) deleteSnapshot(b.getAttribute('data-del-snap'));
+      else if (b.hasAttribute('data-restore-file')) restoreNativeBackup(b.getAttribute('data-restore-file'));
+      else if (b.hasAttribute('data-del-file')) deleteNativeBackup(b.getAttribute('data-del-file'));
+      else if (b.hasAttribute('data-del-income')) deleteIncome(b.getAttribute('data-del-income'));
+    });
   }
 
   function bindDialog() {
@@ -2248,7 +3027,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     document.addEventListener('keydown', function (e) {
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      var map = { '1': 'home', '2': 'ledger', '3': 'month', '4': 'rate', '5': 'piggy', '6': 'sim' };
+      var map = { '1': 'home', '2': 'ledger', '3': 'month', '4': 'rate', '5': 'piggy', '6': 'sim', '7': 'income', '8': 'data' };
       if (map[e.key]) go(map[e.key]);
     });
   }
@@ -2256,11 +3035,16 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
   /* ---------------- 初始化 ---------------- */
   function init() {
     load();
+    maybeAutoBackup();
     state.draftCat = 'food';
+    state.draftIncCat = 'service';
     renderChips();
+    renderIncChips();
     fillRateInputs();
+    $('inIncDate').value = todayStr();
     bindNav();
     bindLedger();
+    bindIncome();
     bindDelegatedDelete();
     bindRate();
     bindPiggy();
@@ -2270,6 +3054,7 @@ input[type=range]::-moz-range-thumb{width:26px;height:26px;border:6px solid var(
     bindKeyboard();
     refreshAll();
     go('home');
+    maybeAutoBackup();
   }
 
   if (document.readyState === 'loading') {

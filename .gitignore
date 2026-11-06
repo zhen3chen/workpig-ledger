@@ -16,3 +16,6 @@ keystore.properties
 
 # 生成的 Secrets 文本
 secrets.txt
+
+# 本地构建产物（云端 Release 由 Actions 生成，不需要入库）
+dist/

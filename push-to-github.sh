@@ -43,10 +43,21 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 echo "✓ 工作区干净"
 
-# 防护 3：提交里不能含明显密钥内容（简易扫描）
-if git log -p --all 2>/dev/null | grep -qiE 'BEGIN (RSA |)PRIVATE KEY|RELEASE_STORE_PASSWORD=.{6,}'; then
-  echo "❌ 提交历史里疑似含私钥或签名密码，已中止"
+# 防护 3：提交历史里不能含真实私钥或真实签名密码
+# 说明：不能用 `RELEASE_STORE_PASSWORD=.{6,}` 这种宽松正则——脚本自身、workflow 里的
+# printf 模板和 README 的中文示例都会命中，造成误报；改为比对本机真实密码字面值。
+if git log -p --all 2>/dev/null | grep -qE -- '-----BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY-----'; then
+  echo "❌ 提交历史里疑似含私钥，已中止"
   exit 1
+fi
+if [ -f keystore.properties ]; then
+  while IFS= read -r REAL_PASS; do
+    [ "${#REAL_PASS}" -ge 6 ] || continue
+    if git log -p --all 2>/dev/null | grep -Fq -- "$REAL_PASS"; then
+      echo "❌ 提交历史里疑似含真实签名密码，已中止"
+      exit 1
+    fi
+  done < <(sed -n 's/^RELEASE_\(STORE\|KEY\)_PASSWORD=//p' keystore.properties | tr -d '\r' | sort -u)
 fi
 echo "✓ 提交历史无密钥痕迹"
 echo ""

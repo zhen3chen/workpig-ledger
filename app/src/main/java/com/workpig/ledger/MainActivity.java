@@ -1,10 +1,14 @@
 package com.workpig.ledger;
 
 import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.KeyEvent;
 import android.view.View;
@@ -20,7 +24,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 打工人小账本 · WebView 壳
@@ -37,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String APP_URL = "file:///android_asset/index.html";
     private static final int REQ_FILE_CHOOSER = 1001;
     private static final int REQ_CREATE_DOC = 1002;
+    private static final String BACKUP_PREF = "workpig_backups";
+    private static final String BACKUP_RELATIVE_PATH = Environment.DIRECTORY_DOWNLOADS + "/打工人小账本";
 
     private WebView webView;
     private ValueCallback<Uri[]> fileChooserCallback;
@@ -262,6 +275,152 @@ public class MainActivity extends AppCompatActivity {
         public String platform() {
             return "android";
         }
+
+        /**
+         * 一键本地备份：直接写进「下载 / 打工人小账本」，Android 10+ 无需任何权限、
+         * 无需用户选择位置，卸载重装 App 文件依然在。
+         * 返回 OK / PICKER（老系统退回让用户选位置）/ ERR:xxx。
+         */
+        @JavascriptInterface
+        public String saveBackup(String fileName, String base64) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return "PICKER";
+            try {
+                byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+                String safe = fileName == null ? "backup.json" : fileName.replace('/', '_');
+                ContentValues cv = new ContentValues();
+                cv.put(MediaStore.Downloads.DISPLAY_NAME, safe);
+                cv.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+                cv.put(MediaStore.Downloads.RELATIVE_PATH, BACKUP_RELATIVE_PATH);
+                cv.put(MediaStore.Downloads.IS_PENDING, 1);
+                Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                if (uri == null) return "ERR:no-uri";
+                try (OutputStream os = getContentResolver().openOutputStream(uri)) {
+                    if (os == null) throw new IllegalStateException("no stream");
+                    os.write(bytes);
+                    os.flush();
+                }
+                ContentValues done = new ContentValues();
+                done.put(MediaStore.Downloads.IS_PENDING, 0);
+                getContentResolver().update(uri, done, null, null);
+                registerBackup(safe, uri.toString(), bytes.length);
+                return "OK";
+            } catch (Exception e) {
+                return "ERR:" + e.getClass().getSimpleName();
+            }
+        }
+
+        /** 列出本 App 写进「下载」目录的备份文件（时间 / 大小 / 文件名）。 */
+        @JavascriptInterface
+        public String listBackups() {
+            JSONArray out = new JSONArray();
+            for (JSONObject o : readBackupRegistry()) {
+                try {
+                    JSONObject x = new JSONObject();
+                    x.put("name", o.optString("name"));
+                    x.put("at", o.optLong("at"));
+                    x.put("size", o.optLong("size"));
+                    out.put(x);
+                } catch (Exception ignored) {
+                }
+            }
+            return out.toString();
+        }
+
+        /** 读回某个备份文件内容，返回 UTF-8 文本的 base64，页面再解码导入。 */
+        @JavascriptInterface
+        public String readBackup(String name) {
+            String uri = findBackupUri(name);
+            if (uri == null) return "";
+            try (InputStream is = getContentResolver().openInputStream(Uri.parse(uri))) {
+                if (is == null) return "";
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = is.read(buf)) > 0) bos.write(buf, 0, n);
+                return Base64.encodeToString(bos.toByteArray(), Base64.NO_WRAP);
+            } catch (Exception e) {
+                return "";
+            }
+        }
+
+        @JavascriptInterface
+        public String deleteBackup(String name) {
+            try {
+                String uri = findBackupUri(name);
+                List<JSONObject> keep = new ArrayList<>();
+                for (JSONObject o : readBackupRegistry()) {
+                    if (!name.equals(o.optString("name"))) keep.add(o);
+                }
+                writeBackupRegistry(keep);
+                if (uri != null) getContentResolver().delete(Uri.parse(uri), null, null);
+                return "OK";
+            } catch (Exception e) {
+                return "ERR";
+            }
+        }
+    }
+
+    /** 备份文件登记表存在 SharedPreferences，避免每次都去查 MediaStore。 */
+    private List<JSONObject> readBackupRegistry() {
+        List<JSONObject> list = new ArrayList<>();
+        try {
+            SharedPreferences sp = getSharedPreferences(BACKUP_PREF, MODE_PRIVATE);
+            JSONArray arr = new JSONArray(sp.getString("list", "[]"));
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject o = arr.optJSONObject(i);
+                if (o != null && !o.optString("name").isEmpty()) list.add(o);
+            }
+        } catch (Exception ignored) {
+        }
+        return list;
+    }
+
+    private void writeBackupRegistry(List<JSONObject> list) {
+        JSONArray arr = new JSONArray();
+        for (JSONObject o : list) arr.put(o);
+        getSharedPreferences(BACKUP_PREF, MODE_PRIVATE)
+                .edit().putString("list", arr.toString()).apply();
+    }
+
+    private String findBackupUri(String name) {
+        if (name == null) return null;
+        for (JSONObject o : readBackupRegistry()) {
+            if (name.equals(o.optString("name"))) return o.optString("uri");
+        }
+        return null;
+    }
+
+    private void registerBackup(String name, String uri, long size) {
+        List<JSONObject> list = new ArrayList<>();
+        for (JSONObject o : readBackupRegistry()) {
+            if (!name.equals(o.optString("name"))) {
+                list.add(o);
+            } else {
+                // 同名旧文件直接清掉，避免出现「xxx (1).json」孤儿文件
+                try {
+                    getContentResolver().delete(Uri.parse(o.optString("uri")), null, null);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        JSONObject n = new JSONObject();
+        try {
+            n.put("name", name);
+            n.put("uri", uri);
+            n.put("size", size);
+            n.put("at", System.currentTimeMillis());
+        } catch (Exception ignored) {
+        }
+        list.add(0, n);
+        // 只保留最近 10 份，旧文件一并从「下载」目录清掉，避免越积越多
+        while (list.size() > 10) {
+            JSONObject old = list.remove(list.size() - 1);
+            try {
+                getContentResolver().delete(Uri.parse(old.optString("uri")), null, null);
+            } catch (Exception ignored) {
+            }
+        }
+        writeBackupRegistry(list);
     }
 
     /** 把待保存的字节写入用户在 SAF 中选择的 Uri */

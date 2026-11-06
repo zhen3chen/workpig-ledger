@@ -37,7 +37,7 @@ bash sign.sh
 
 # 3) 产物
 ls dist/
-# 打工人小账本-v1.0.0.apk
+# 打工人小账本-v1.1.0.apk
 ```
 
 **务必把 `workpig-release.jks` 和密码另外备份一份。** 密钥丢了，已安装的旧版就无法覆盖升级，只能卸载重装（数据随之丢失）。
@@ -142,6 +142,7 @@ workpig-android/
 | 数据持久化 | `setDomStorageEnabled(true)` → 页面里的 localStorage 正常工作 |
 | 导出 JSON/CSV | 页面检测 `window.AndroidBridge`，走 `saveBlob(name, base64, mime)` 写入系统「下载」目录（Android 10+，MediaStore） |
 | 导入 JSON | `onShowFileChooser` + `ACTION_GET_CONTENT`，回填给页面的 `<input type=file>` |
+| 本地备份（v1.1+） | 原生桥 `saveBackup / listBackups / readBackup / deleteBackup` 直写 `下载/打工人小账本`，每日自动备份、保留最近 10 份；无需权限、卸载重装不丢 |
 | 二次确认 | 拦截 `window.prompt`（「清空全部」需要输入关键词），换成原生输入框；防止 WebView 默认不支持 prompt 而失效 |
 | 返回键 | 先关页面弹窗，再退出 |
 | 云备份 | `backup_rules.xml` / `data_extraction_rules.xml` 只备份 `app_webview/`，换机可恢复 localStorage |
@@ -182,6 +183,11 @@ A：导出走系统「另存为」选择器（`ACTION_CREATE_DOCUMENT`），会�
 若设备上没有任何文件管理器 / 保存器，会提示「找不到可用的文件保存器」。本工程不申请任何存储读写权限，
 这是 HyperOS 上最稳的做法（Android 14+ 的分区存储策略也完全兼容）。
 
+**Q：Windows 下 Gradle 报找不到签名密钥**
+A：`keystore.properties` 里的 `RELEASE_STORE_FILE` 必须写 Windows 路径
+（如 `C:/Users/你的用户名/workpig-android/workpig-release.jks`）。
+Git Bash 风格的 `/c/Users/...` 会被 Gradle 按相对路径解析，导致签名阶段失败。
+
 **Q：为什么不做成 Flutter/原生重写？**
 A：这个工作台是纯前端 + localStorage，套壳零收益差异；真要原生体验，应重做 UI 层，属于另一个项目规模。
 
@@ -190,7 +196,8 @@ A：这个工作台是纯前端 + localStorage，套壳零收益差异；真要�
 ## 九、用 GitHub Actions 云端自动出包
 
 工程内已带 `.github/workflows/build-release.yml`，不需要本机装任何环境。
-仓库已初始化好（`main` 分支、2 次提交、密钥与本地配置均已排除）。
+仓库已推送到 GitHub（`main` 分支；签名密钥、`keystore.properties`、`secrets.txt` 均已由 `.gitignore` 排除）。
+打 `v*` tag 会自动创建 Release 并附上签名 APK 与 `.sha256`，可直接把下载链接发到新手机安装。
 
 ### 第 1 步：在 GitHub 上新建空仓库
 
@@ -238,5 +245,17 @@ bash make-secrets.sh
 
 > CI 机器在境外，走官方 Gradle 源一般不会超时；若用国内自建 runner，把
 > `gradle-wrapper.properties` 里的 `distributionUrl` 换成腾讯云镜像。
+
+---
+
+## 十、版本记录
+
+| 版本 | 变更 |
+|---|---|
+| **v1.0.0** | 首版：离线 WebView 壳 + 时薪/记账/存钱罐工作台，JSON/CSV 导出与导入，GitHub Actions 云端出包 |
+| **v1.1.0** | 额外收入独立页面并计入月度收入（联动结余、储蓄率、首页）；应用内每日自动快照（最多 8 份，可恢复/导出/删除）；原生本地备份直写「下载 / 打工人小账本」（每日自动、保留 10 份）；覆盖/合并两种导入、粘贴文本迁移、导入撤销；CSV 含支出与收入；手机端补上「收入」「备份」入口 |
+
+> 签名密钥与 v1.0.0 完全一致，v1.1.0 可直接覆盖安装，`localStorage` 里的账本数据不丢。
+> 换机：旧手机「备份 → 导出备份文件」→ 新手机安装新版 →「选择文件导入 / 粘贴文本」即可恢复。
 
 
